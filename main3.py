@@ -53,6 +53,9 @@ found_cat = []
 
 label_to_remove = []
 
+bad_stuff_list = []
+bad_stuff_values = []
+
 dataframe = pandas.read_csv("planista_database.csv")
 dataframe["date"] = pandas.to_datetime(dataframe["date"], format="%d.%m.%Y")
 
@@ -60,29 +63,6 @@ current_month_df = dataframe[dataframe["date"].dt.month == current_month]
 last_month_df = dataframe[dataframe["date"].dt.month == current_month - 1]
 
 category_sums = current_month_df.groupby("category")["price"].sum()
-
-bad_stuff_list = []
-bad_stuff_values = []
-
-alc_sum = category_sums.get("alkohol", 0)
-if alc_sum:
-    bad_stuff_values.append(alc_sum)
-    bad_stuff_list.append("Alkohol")
-
-# restaurant_sum = category_sums.get("restaurant", 0)
-# if restaurant_sum:
-#     bad_stuff_values.append(restaurant_sum)
-#     bad_stuff_list.append("Restaurant")
-
-gambling_sum = category_sums.get("gluecksspiel", 0)
-if gambling_sum:
-    bad_stuff_values.append(gambling_sum)
-    bad_stuff_list.append("Gluecksspiel")
-
-tobacco_sum = category_sums.get("tabakwaren", 0)
-if tobacco_sum:
-    bad_stuff_values.append(tobacco_sum)
-    bad_stuff_list.append("Tabakwaren")
 
 for cat in category_list:
     cat_df = dataframe[dataframe["category"] == cat.lower()]
@@ -163,6 +143,7 @@ def save_data():
     selected_shop.set("---")
 
     date_entry.config(fg="#d3d3d3")
+    hall_of_shame_plt()
 
     update_last_entry()
     main_window.update()
@@ -176,6 +157,27 @@ def open_stats_window():
     overall_stats_df = pandas.read_csv("planista_database.csv")
     overall_sum = round(sum(overall_stats_df["price"]), 2)
 
+    def small_plt(root, values, labels, month, year, title, row, column):
+        chart_frame = tk.Frame(root)
+        chart_frame.grid(row=row, column=column)
+
+        fig, ax = plt.subplots(figsize=(4, 3))
+
+        ax.set_aspect('equal')
+        ax.pie(values=values, labels=labels, autopct="%1.1f%%", colors=color_list)
+        ax.set_title(title)
+
+        canvas = FigureCanvasTkAgg(fig, master=chart_frame)
+        canvas.draw()
+        canvas_widget = canvas.get_tk_widget()
+        canvas_widget.grid(row=row, column=column)
+        canvas_widget.bind("<Button-1>", lambda event: plt_window_1(
+            values=values,
+            labels=labels,
+            title=title))
+
+        plt.close(fig)
+
     def reset_entries():
         global label_to_remove
         selected_month.set("")
@@ -184,8 +186,8 @@ def open_stats_window():
         for label in label_to_remove:
             label.config(text="")
 
-        total_purchases.config(text=f"Total purchases:\n"
-                                    f"Total cost:")
+        total_purchases.config(text=f"Total purchases: {len(overall_stats_df['item'])}\n"
+                                    f"Total cost: {overall_sum}")
 
         new_cat_text = tk.Label(master=gui_frame_2,
                                    text=f"",
@@ -194,6 +196,12 @@ def open_stats_window():
                                    )
         new_cat_text.grid(row=4, column=1, pady=10)
         label_to_remove.append(new_cat_text)
+
+        small_plt(gui_frame_2, start_shop_sums.values, start_shop_sums.index, current_month, current_year,
+                  "Overall Shops", 8, 0)
+
+        small_plt(gui_frame_2, start_cat_sums.values, start_cat_sums.index, current_month, current_year,
+                  "Overall Categories", 8, 2)
 
     def clear_year(event):
         """ clears the year entry widget """
@@ -235,77 +243,35 @@ def open_stats_window():
         # wenn keine Kategorie gewaehlt wurde
         if not chosen_cat:
             # wenn Monat gewaehlt wurde
+            shop_sums = entries_month.groupby("shop")["price"].sum()
+            cat_sums = entries_month.groupby("category")["price"].sum()
             if chosen_month > 0:
                 total_purchases.config(text=f"Total purchases: {len(entries_month)}\n"
                                             f"Total cost: {round(total_sum_per_month, 2):.2f} EUR")
 
                 text_label(gui_frame_2, label_to_remove, 0, chosen_month, chosen_year)
 
-                shop_sums = entries_month.groupby("shop")["price"].sum()
-                cat_sums = entries_month.groupby("category")["price"].sum()
+                small_plt(gui_frame_2, shop_sums.values, shop_sums.index,chosen_month, chosen_year,
+                          f"Shops for {chosen_month}/{chosen_year}",8, 0)
 
-                chart_frame = tk.Frame(gui_frame_2)
-                chart_frame.grid(row=8, column=0)
-
-                fig, ax = plt.subplots(figsize=(4, 3))
-
-                ax.set_aspect('equal')
-                ax.pie(shop_sums.values, labels=shop_sums.index, autopct="%1.1f%%", colors=color_list)
-                ax.set_title(f"Shops for {chosen_month}/{chosen_year}")
-
-                canvas = FigureCanvasTkAgg(fig, master=chart_frame)
-                canvas.draw()
-                canvas.get_tk_widget().grid(row=8, column=0)
-
-                chart_frame_2 = tk.Frame(gui_frame_2)
-                chart_frame_2.grid(row=8, column=2)
-
-                fig2, ax2 = plt.subplots(figsize=(4, 3))
-
-                ax2.set_aspect('equal')
-
-                ax2.pie(cat_sums.values, labels=cat_sums.index, autopct="%1.1f%%", colors=color_list)
-                ax2.set_title(f"Categories for {chosen_month}/{chosen_year}")
-
-                canvas_2 = FigureCanvasTkAgg(fig2, master=chart_frame_2)
-                canvas_2.draw()
-                canvas_2.get_tk_widget().grid(row=8, column=2)
+                small_plt(gui_frame_2, cat_sums.values, cat_sums.index,chosen_month, chosen_year,
+                          f"Categories for {chosen_month}/{chosen_year}",8, 2)
 
             # wenn kein Monat gewaehlt wurde
             else:
+                shop_sums = entries_year.groupby("shop")["price"].sum()
+                cat_sums = entries_year.groupby("category")["price"].sum()
                 total_purchases.config(text=f"Total purchases: {len(entries_year)}\n"
                                             f"Total cost: {round(total_sum_per_year, 2):.2f} EUR")
 
                 text_label(gui_frame_2, label_to_remove, 0, 0, chosen_year)
 
-                chart_frame = tk.Frame(gui_frame_2)
-                chart_frame.grid(row=8, column=0)
+                small_plt(gui_frame_2, shop_sums.values, shop_sums.index, chosen_month, chosen_year,
+                          f"Shops for {chosen_year}", 8, 0)
 
-                shop_sums = entries_year.groupby("shop")["price"].sum()
-                cat_sums = entries_year.groupby("category")["price"].sum()
+                small_plt(gui_frame_2, cat_sums.values, cat_sums.index, chosen_month,chosen_year,
+                          f"Shops for {chosen_year}", 8, 2)
 
-                fig, ax = plt.subplots(figsize=(4, 3))
-
-                ax.set_aspect('equal')
-                ax.pie(shop_sums.values, labels=shop_sums.index, autopct="%1.1f%%", colors=color_list)
-                ax.set_title(f"Shops for {chosen_year}")
-
-                canvas = FigureCanvasTkAgg(fig, master=gui_frame_2)
-                canvas.draw()
-                canvas.get_tk_widget().grid(row=8, column=0)
-
-                chart_frame_2 = tk.Frame(gui_frame_2)
-                chart_frame_2.grid(row=8, column=2)
-
-                fig2, ax2 = plt.subplots(figsize=(4, 3))
-
-                ax2.set_aspect('equal')
-                ax2.pie(cat_sums.values, labels=cat_sums.index, autopct="%1.1f%%", colors=color_list)
-                ax2.set_title(f"Category for {chosen_year}")
-
-                canvas_2 = FigureCanvasTkAgg(fig2, master=gui_frame_2)
-                canvas_2.draw()
-                canvas_2.get_tk_widget().grid(row=8, column=2)
         # wenn Kategorie gewaehlt wurde
         else:
             cat_df = search_df[search_df["category"] == chosen_cat]
@@ -402,31 +368,90 @@ def open_stats_window():
     start_shop_sums = overall_stats_df.groupby("shop")["price"].sum()
     start_cat_sums = overall_stats_df.groupby("category")["price"].sum()
 
-    start_frame = tk.Frame(gui_frame_2)
-    start_frame.grid(row=8, column=0)
+    small_plt(gui_frame_2, start_shop_sums.values, start_shop_sums.index, current_month, current_year,
+              "Overall Shops", 8, 0)
 
-    fig, ax = plt.subplots(figsize=(4, 3))
+    small_plt(gui_frame_2, start_cat_sums.values, start_cat_sums.index, current_month, current_year,
+              "Overall Categories", 8, 2)
 
-    ax.set_aspect('equal')
-    ax.pie(start_shop_sums.values, labels=start_shop_sums.index, autopct="%1.1f%%", colors=color_list)
-    ax.set_title("Overall Shops")
 
-    canvas = FigureCanvasTkAgg(fig, master=gui_frame_2)
+def plt_window_1(values, labels, title):
+
+    plt_window = tk.Toplevel(main_window)
+    plt_window.minsize(400, 400)
+    plt_window.title(title.title())
+
+    chart_frame = tk.Frame(plt_window)
+    chart_frame.grid(row=0, column=0, padx=20, pady=20)
+
+    fig, ax = plt.subplots(figsize=(7, 7))
+
+    ax.pie(values,
+           labels=labels,
+           colors=color_list,
+           autopct=lambda p: f'{p * sum(values) / 100 :.0f} EUR')
+    ax.set_title(title)
+
+    canvas = FigureCanvasTkAgg(fig, master=chart_frame)
     canvas.draw()
-    canvas.get_tk_widget().grid(row=8, column=0)
+    canvas.get_tk_widget().pack(side=tk.LEFT)
 
-    start_frame_2 = tk.Frame(gui_frame_2)
-    start_frame_2.grid(row=8, column=2)
 
-    fig2, ax2 = plt.subplots(figsize=(4, 3))
+def hall_of_shame_plt():
 
-    ax2.set_aspect('equal')
-    ax2.pie(start_cat_sums.values, labels=start_cat_sums.index, autopct="%1.1f%%", colors=color_list)
-    ax2.set_title("Overall Categories")
+    global bad_stuff_list, bad_stuff_values
 
-    canvas_2 = FigureCanvasTkAgg(fig2, master=gui_frame_2)
-    canvas_2.draw()
-    canvas_2.get_tk_widget().grid(row=8, column=2)
+    bad_stuff_list.clear()
+    bad_stuff_values.clear()
+
+    hos_df = pandas.read_csv("planista_database.csv")
+    hos_df["date"] = pandas.to_datetime(hos_df["date"], format="%d.%m.%Y")
+
+    hos_month_df = hos_df[hos_df["date"].dt.month == current_month]
+
+    hos_cat_sums = hos_month_df.groupby("category")["price"].sum()
+
+    alc_sum = hos_cat_sums.get("alkohol", 0)
+    if alc_sum:
+        bad_stuff_values.append(alc_sum)
+        bad_stuff_list.append("Alkohol")
+
+    # restaurant_sum = category_sums.get("restaurant", 0)
+    # if restaurant_sum:
+    #     bad_stuff_values.append(restaurant_sum)
+    #     bad_stuff_list.append("Restaurant")
+
+    gambling_sum = hos_cat_sums.get("gluecksspiel", 0)
+    if gambling_sum:
+        bad_stuff_values.append(gambling_sum)
+        bad_stuff_list.append("Gluecksspiel")
+
+    tobacco_sum = hos_cat_sums.get("tabakwaren", 0)
+    if tobacco_sum:
+        bad_stuff_values.append(tobacco_sum)
+        bad_stuff_list.append("Tabakwaren")
+
+    chart_frame = tk.Frame(main_window)
+    chart_frame.grid(row=6, column=0, padx=20)
+
+    fig, ax = plt.subplots(figsize=(5, 4))
+
+    if bad_stuff_list:
+        ax.pie(bad_stuff_values,
+               labels=bad_stuff_list,
+               colors=color_list,
+               autopct=lambda p: f'{p * sum(bad_stuff_values) / 100 :.0f} EUR')
+        ax.set_title(f"Hall of Shame {current_month}/{current_year}")
+    else:
+        ax.pie(bad_stuff_values,
+               labels=bad_stuff_list,
+               colors=color_list,
+               autopct=lambda p: f'{p * sum(bad_stuff_values) / 100 :.0f} EUR')
+        ax.set_title("")
+
+    canvas = FigureCanvasTkAgg(fig, master=chart_frame)
+    canvas.draw()
+    canvas.get_tk_widget().pack(side=tk.LEFT)
 
 
 # GUI
@@ -527,30 +552,7 @@ drop_down_shop.grid(row=2, column=3, padx=10)
 menu_4 = gui_frame.nametowidget(drop_down_shop.menuname)
 menu_4.config(font=font)
 
-chart_frame = tk.Frame(main_window)
-chart_frame.grid(row=6, column=0, padx=20)
-
-this_year_df = dataframe[dataframe["date"].dt.year == current_year]
-this_years_sum = this_year_df.groupby("shop")["price"].sum()
-
-fig, ax = plt.subplots(figsize=(5, 4))
-
-if bad_stuff_list:
-    ax.pie(bad_stuff_values,
-           labels=bad_stuff_list,
-           colors=color_list,
-           autopct=lambda p: f'{p * sum(bad_stuff_values) / 100 :.0f} EUR')
-    ax.set_title(f"Hall of Shame {current_month}/{current_year}")
-else:
-    ax.pie(bad_stuff_values,
-           labels=bad_stuff_list,
-           colors=color_list,
-           autopct=lambda p: f'{p * sum(bad_stuff_values) / 100 :.0f} EUR')
-    ax.set_title("")
-
-canvas = FigureCanvasTkAgg(fig, master=chart_frame)
-canvas.draw()
-canvas.get_tk_widget().pack(side=tk.LEFT)
+hall_of_shame_plt()
 
 update_last_entry()
 main_window.mainloop()
