@@ -164,7 +164,7 @@ def open_stats_window():
         comb_name = "Other"
         comb_shop_perc = 0
 
-        percentage = (sum(values_list) / 100) * 4
+        percentage = (sum(values_list) / 100) * 5
 
         for val, label in zip(values_list, labels_list):
 
@@ -195,6 +195,7 @@ def open_stats_window():
         canvas.draw()
         canvas_widget = canvas.get_tk_widget()
         canvas_widget.grid(row=row, column=column)
+
         canvas_widget.bind("<Button-1>", lambda event: plt_window_1(
             values=orig_values,
             labels=orig_labels,
@@ -221,6 +222,7 @@ def open_stats_window():
         new_cat_text.grid(row=4, column=1, pady=10)
         label_to_remove.append(new_cat_text)
 
+        year_entry.delete(0, tk.END)
         year_entry.insert(0, str(current_year))
 
         extr_values, extr_labels = extract_shop_category(start_shop_sums.values, start_shop_sums.index)
@@ -559,7 +561,7 @@ def hall_of_shame_plt():
                labels=bad_stuff_list,
                colors=color_list,
                autopct=lambda p: f'{p * sum(bad_stuff_values) / 100 :.0f} EUR')
-        ax.set_title(f"Hall of Shame {current_month}/{current_year}")
+        ax.set_title(f"Hall of Shame {month_dict[current_month]} {current_year}")
     else:
         ax.pie(bad_stuff_values,
                labels=bad_stuff_list,
