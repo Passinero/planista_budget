@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from datetime import date
 from PIL import Image, ImageTk
 from text_label import text_label
-
+import numpy as np
 
 font = ("open sans", 15)
 bold_font = ("open sans", 18, "bold")
@@ -142,7 +142,6 @@ def save_data():
     selected_category.set("---")
     selected_shop.set("---")
 
-    date_entry.config(fg="#d3d3d3")
     hall_of_shame_plt()
 
     update_last_entry()
@@ -190,10 +189,10 @@ def open_stats_window():
                                     f"Total cost: {overall_sum}")
 
         new_cat_text = tk.Label(master=gui_frame_2,
-                                   text=f"",
-                                   font=("open sans", 16, "bold"),
-                                   bg="white"
-                                   )
+                                text=f"",
+                                font=("open sans", 16, "bold"),
+                                bg="white"
+                                )
         new_cat_text.grid(row=4, column=1, pady=10)
         label_to_remove.append(new_cat_text)
 
@@ -251,11 +250,11 @@ def open_stats_window():
 
                 text_label(gui_frame_2, label_to_remove, 0, chosen_month, chosen_year)
 
-                small_plt(gui_frame_2, shop_sums.values, shop_sums.index,chosen_month, chosen_year,
-                          f"Shops for {chosen_month}/{chosen_year}",8, 0)
+                small_plt(gui_frame_2, shop_sums.values, shop_sums.index, chosen_month, chosen_year,
+                          f"Shops for {chosen_month}/{chosen_year}", 8, 0)
 
-                small_plt(gui_frame_2, cat_sums.values, cat_sums.index,chosen_month, chosen_year,
-                          f"Categories for {chosen_month}/{chosen_year}",8, 2)
+                small_plt(gui_frame_2, cat_sums.values, cat_sums.index, chosen_month, chosen_year,
+                          f"Categories for {chosen_month}/{chosen_year}", 8, 2)
 
             # wenn kein Monat gewaehlt wurde
             else:
@@ -269,7 +268,7 @@ def open_stats_window():
                 small_plt(gui_frame_2, shop_sums.values, shop_sums.index, chosen_month, chosen_year,
                           f"Shops for {chosen_year}", 8, 0)
 
-                small_plt(gui_frame_2, cat_sums.values, cat_sums.index, chosen_month,chosen_year,
+                small_plt(gui_frame_2, cat_sums.values, cat_sums.index, chosen_month, chosen_year,
                           f"Shops for {chosen_year}", 8, 2)
 
         # wenn Kategorie gewaehlt wurde
@@ -282,7 +281,8 @@ def open_stats_window():
             if chosen_month > 0:
                 cat_sums = entries_month_cat.groupby("category")["price"].sum()
 
-                total_purchases.config(text=f"Total purchases: {len(cat_df_month)}\nTotal cost: {sum(cat_sums):.2f} EUR",
+                total_purchases.config(text=f"Total purchases: {len(cat_df_month)}\n"
+                                            f"Total cost: {sum(cat_sums):.2f} EUR",
                                        font=bold_font)
 
                 text_label(gui_frame_2, label_to_remove, chosen_cat.title(), chosen_month, current_year)
@@ -290,7 +290,8 @@ def open_stats_window():
             # wenn Kategorie aber kein Monat gewaehlt wurde
             else:
                 cat_sums = cat_df_year.groupby("category")["price"].sum()
-                total_purchases.config(text=f"Total purchases: {len(cat_df_year)}\nTotal cost: {sum(cat_sums):.2f} EUR",
+                total_purchases.config(text=f"Total purchases: {len(cat_df_year)}\n"
+                                            f"Total cost: {sum(cat_sums):.2f} EUR",
                                        font=bold_font)
 
                 text_label(gui_frame_2, label_to_remove, chosen_cat.title(), 0, current_year)
@@ -401,6 +402,45 @@ def hall_of_shame_plt():
 
     global bad_stuff_list, bad_stuff_values
 
+    def hos_bar_chart_window():
+
+        if bad_stuff_values and len(hos_last_month_cat_sums.values) >= 3:
+            bar_chart_window = tk.Toplevel(main_window)
+            bar_chart_window.title("Hall of Shame Comparison")
+            bar_chart_window.config(bg="white")
+            bar_chart_window.minsize(400, 400)
+
+            chart_frame_2 = tk.Frame(bar_chart_window, bg="white")
+            chart_frame_2.grid(row=0, column=0, pady=50)
+
+            x = np.arange(len(hos_last_month_df["price"]))
+
+            width = 0.35
+
+            fig2, ax2 = plt.subplots(figsize=(7, 5))
+            fig2.patch.set_facecolor('white')
+
+            bars_current = ax2.bar(x - width / 2, bad_stuff_values, width, label='Current Month')
+
+            bars_previous = ax2.bar(x + width / 2, hos_last_month_cat_sums.values, width, label='Last Month')
+
+            ax2.set_xlabel('')
+            ax2.set_ylabel('')
+            ax2.set_title('Comparison current and previous month')
+            ax2.set_xticks(x)
+            ax2.set_xticklabels(bad_stuff_list)
+            ax2.legend()
+
+            ax2.set_aspect('auto')
+
+            canvas2 = FigureCanvasTkAgg(fig2, master=chart_frame_2)
+            canvas2.draw()
+            canvas_widget2 = canvas2.get_tk_widget()
+            canvas_widget2.config(bg="white")
+            canvas_widget2.grid(row=0, column=0)
+        else:
+            return
+
     bad_stuff_list.clear()
     bad_stuff_values.clear()
 
@@ -409,7 +449,15 @@ def hall_of_shame_plt():
 
     hos_month_df = hos_df[hos_df["date"].dt.month == current_month]
 
+    last_month = current_month - 1
+
+    if current_month == 1:
+        last_month = 12
+
+    hos_last_month_df = hos_df[hos_df["date"].dt.month == last_month]
+
     hos_cat_sums = hos_month_df.groupby("category")["price"].sum()
+    hos_last_month_cat_sums = hos_last_month_df.groupby("category")["price"].sum()
 
     alc_sum = hos_cat_sums.get("alkohol", 0)
     if alc_sum:
@@ -432,7 +480,7 @@ def hall_of_shame_plt():
         bad_stuff_list.append("Tabakwaren")
 
     chart_frame = tk.Frame(main_window)
-    chart_frame.grid(row=6, column=0, padx=20)
+    chart_frame.grid(row=6, column=0)
 
     fig, ax = plt.subplots(figsize=(5, 4))
 
@@ -449,9 +497,15 @@ def hall_of_shame_plt():
                autopct=lambda p: f'{p * sum(bad_stuff_values) / 100 :.0f} EUR')
         ax.set_title("")
 
+    ax.set_aspect('equal')
+
+    fig.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
+
     canvas = FigureCanvasTkAgg(fig, master=chart_frame)
     canvas.draw()
-    canvas.get_tk_widget().pack(side=tk.LEFT)
+    canvas_widget = canvas.get_tk_widget()
+    canvas_widget.bind("<Button-1>", lambda event: hos_bar_chart_window())
+    canvas_widget.pack(side=tk.LEFT)
 
 
 # GUI
@@ -555,4 +609,5 @@ menu_4.config(font=font)
 hall_of_shame_plt()
 
 update_last_entry()
+
 main_window.mainloop()
