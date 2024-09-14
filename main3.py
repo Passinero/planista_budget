@@ -37,7 +37,7 @@ cat_dict = {}
 category_list = ["Lebensmittel", "Haushalt", "Kleidung", "Elektronik", "Pflanzen",
                  "Fast Food", "Ausbildung", "Fluff", "Tabakwaren",
                  "Auto", "Alkohol", "Restaurant", "Gluecksspiel",
-                 "Tanken", "Sonstiges",
+                 "Tanken", "Geschenke", "Sonstiges",
                  ]
 
 shop_list = ["Penny", "Famila", "Aldi", "Growshop",
@@ -166,6 +166,7 @@ def save_data():
 
     update_last_entry()
     main_window.update()
+    messagebox.showinfo("Data saved successfully", "Your data was saved")
 
 
 def open_stats_window():
@@ -466,14 +467,10 @@ shop_text.grid(row=1, column=3)
 date_text = tk.Label(master=gui_frame, text="Date (dd.mm.yyyy)", font=font, bg="white")
 date_text.grid(row=1, column=7)
 
-last_entry_string = ""
-if len(str(last_entry_price).split(".")[1]) == 1:
-    last_entry_string = f"{last_entry_price}0"
-print(last_entry_string)
 if last_entry_item:
     last_entry_text = tk.Label(master=gui_frame,
                                text=f"Your last entry: {last_entry_item.title()} - "
-                               f"{last_entry_string} EUR - "
+                               f"{last_entry_price:.2f} EUR - "
                                f"{last_entry_date}",
                                font=font,
                                bg="white"
