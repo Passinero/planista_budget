@@ -164,7 +164,7 @@ def open_stats_window():
         fig, ax = plt.subplots(figsize=(4, 3))
 
         ax.set_aspect('equal')
-        ax.pie(values=values, labels=labels, autopct="%1.1f%%", colors=color_list)
+        ax.pie(values, labels=labels, autopct="%1.1f%%", colors=color_list)
         ax.set_title(title)
 
         canvas = FigureCanvasTkAgg(fig, master=chart_frame)
