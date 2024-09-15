@@ -341,9 +341,10 @@ def open_stats_window():
 
         # wenn Kategorie gewaehlt wurde
         else:
-            cat_df2 = search_df[search_df["category"] == chosen_cat]
-            cat_df_month = cat_df2[(cat_df["date"].dt.month == chosen_month) & (cat_df2["date"].dt.year == chosen_year)]
-            cat_df_year = cat_df2[cat_df["date"].dt.year == chosen_year]
+            cat_df = search_df[search_df["category"] == chosen_cat]
+            print(f"cat_df2: {cat_df}")
+            cat_df_month = cat_df[(cat_df["date"].dt.month == chosen_month) & (cat_df["date"].dt.year == chosen_year)]
+            cat_df_year = cat_df[cat_df["date"].dt.year == chosen_year]
 
             # wenn Kategorie und Monat gewaehlt wurden
             if chosen_month > 0:
