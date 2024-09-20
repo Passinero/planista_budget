@@ -1,6 +1,10 @@
 import tkinter as tk
+from datetime import date
 
 font = ("open sans", 18, "bold")
+
+current_month = date.today().month
+current_year = date.today().year
 
 month_dict = {1: "January",
               2: "February",
@@ -23,28 +27,40 @@ def text_label(root, list_to_remove, cat, month, year):
         month_name = month_dict[month]
     except KeyError:
         month = 0
-    # when only the year is chosen
+        month_name = ""
+
+    # when nothing was chosen
     if cat == 0 and month == 0 and year == 0:
         chosen_year_text = tk.Label(master=root,
-                                    text=f"All Transactions",
+                                    text=f"Overall Transactions",
                                     font=font,
                                     bg="white"
                                     )
         chosen_year_text.grid(row=4, column=1, pady=10, sticky="s")
         list_to_remove.append(chosen_year_text)
-
+    # when no category and no month were chosen
     elif cat == 0 and month == 0:
         chosen_year_text = tk.Label(master=root,
-                                    text=f"Money spend in:\n{year}",
+                                    text=f"Transactions {year}",
+                                    font=font,
+                                    bg="white"
+                                    )
+        chosen_year_text.grid(row=4, column=1, pady=10, sticky="s")
+        list_to_remove.append(chosen_year_text)
+    # when category and month were chosen
+    elif cat != 0 and month != 0:
+        chosen_year_text = tk.Label(master=root,
+                                    text=f"Money spend on {cat}\nin {month_name} {year}",
                                     font=font,
                                     bg="white"
                                     )
         chosen_year_text.grid(row=4, column=1, pady=10, sticky="s")
         list_to_remove.append(chosen_year_text)
 
-    elif cat != 0 and month != 0:
+    # when category and year were chosen
+    elif cat != 0 and year != 0:
         chosen_year_text = tk.Label(master=root,
-                                    text=f"Money spend on {cat} in:\n{month_name} {year}",
+                                    text=f"Money spend on {cat.title()}\nin {year}",
                                     font=font,
                                     bg="white"
                                     )
@@ -54,7 +70,7 @@ def text_label(root, list_to_remove, cat, month, year):
     # when category was chosen
     elif cat != 0:
         chosen_year_text = tk.Label(master=root,
-                                    text = f"Money spend on:\n{cat.title()}",
+                                    text=f"Money spend on \n{cat.title()}",
                                     font=font,
                                     bg="white"
                                     )
@@ -63,7 +79,7 @@ def text_label(root, list_to_remove, cat, month, year):
     # when month and year chosen
     elif month != 0:
         chosen_year_text = tk.Label(master=root,
-                                    text=f"Money spend in:\n{month_name} {year}",
+                                    text=f"Transactions {month_name} {year}",
                                     font=font,
                                     bg="white"
                                     )
