@@ -1,7 +1,7 @@
 import tkinter as tk
 from datetime import date
 
-font = ("open sans", 18, "bold")
+font = ("open sans", 20, "bold")
 
 current_month = date.today().month
 current_year = date.today().year
@@ -32,7 +32,7 @@ def text_label(root, list_to_remove, cat, month, year):
     # when nothing was chosen
     if cat == 0 and month == 0 and year == 0:
         chosen_year_text = tk.Label(master=root,
-                                    text=f"Overall Transactions",
+                                    text=f"",
                                     font=font,
                                     bg="white"
                                     )
@@ -41,7 +41,7 @@ def text_label(root, list_to_remove, cat, month, year):
     # when no category and no month were chosen
     elif cat == 0 and month == 0:
         chosen_year_text = tk.Label(master=root,
-                                    text=f"Transactions {year}",
+                                    text=f"{year}",
                                     font=font,
                                     bg="white"
                                     )
@@ -79,7 +79,7 @@ def text_label(root, list_to_remove, cat, month, year):
     # when month and year chosen
     elif month != 0:
         chosen_year_text = tk.Label(master=root,
-                                    text=f"Transactions {month_name} {year}",
+                                    text=f"{month_name} {year}",
                                     font=font,
                                     bg="white"
                                     )
