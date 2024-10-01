@@ -285,8 +285,8 @@ def hall_of_shame_plt(root, row, column, figsize, chosen_month):
         ax.set_title(f"Hall of Shame {month_dict[chosen_month]} {current_year} - {round(hos_sum, 2)} EUR")
 
     else:
-        ax.pie([1], labels=["No data yet"], colors=['gray'])
-        ax.set_title(f"Hall of Shame {month_dict[current_month]} {current_year} - No data yet")
+        ax.pie([1], labels=["No data"], colors=['gray'])
+        ax.set_title(f"Hall of Shame {month_dict[chosen_month]} {current_year} - No data")
 
     ax.set_aspect('equal')
 
