@@ -13,21 +13,21 @@ import numpy as np
 FONT = ("open sans", 15)
 BOLD_FONT = ("open sans", 18, "bold")
 
-paper_color = "#fbfbfb"
-orange_color = "#fcd9a8"
-dark_color = "#6addda"
-blue_color = "#d0eef8"
-dark_blue_color = "#3bc4cf"
-green_color = "#D9EDBF"
-red_color = "#FFB996"
-dark_orange_color = "#FFCF81"
-pink_color = "#F7B5CA"
-purple_color = "#AC87C5"
-yellow_color = "#F9F3CC"
+PAPER_COLOR = "#fbfbfb"
+ORANGE_COLOR = "#fcd9a8"
+DARK_COLOR = "#6addda"
+BLUE_COLOR = "#d0eef8"
+DARK_BLUE_COLOR = "#3bc4cf"
+GREEN_COLOR = "#D9EDBF"
+RED_COLOR = "#FFB996"
+DARK_ORANGE_COLOR = "#FFCF81"
+PINK_COLOR = "#F7B5CA"
+PURPLE_COLOR = "#AC87C5"
+YELLOW_COLOR = "#F9F3CC"
 
-color_list = [orange_color, dark_orange_color, blue_color, dark_color,
-              dark_blue_color, green_color, red_color, pink_color,
-              purple_color, yellow_color,
+color_list = [ORANGE_COLOR, DARK_ORANGE_COLOR, BLUE_COLOR, DARK_COLOR,
+              DARK_BLUE_COLOR, GREEN_COLOR, RED_COLOR, PINK_COLOR,
+              PURPLE_COLOR, YELLOW_COLOR,
               ]
 
 current_date = date.today().strftime("%d.%m.%Y")
@@ -36,9 +36,9 @@ current_year = date.today().year
 
 category_list = ["Lebensmittel", "Haushalt", "Kleidung", "Elektronik", "Pflanzen",
                  "Fast Food", "Ausbildung", "Fluff", "Tabakwaren",
-                 "Auto", "Alkohol", "Restaurant", "gluecksspiel",
+                 "Auto", "Alkohol", "Restaurant", "Gluecksspiel",
                  "Tanken", "Geschenke", "Arbeit", "Daniela",
-                 "Post", "Bueroartikel", "Sonstiges",
+                 "Post", "Bueroartikel", "Urlaub", "Sonstiges",
                  ]
 
 shop_list = ["Penny", "Famila", "Aldi", "Growshop",
@@ -46,7 +46,11 @@ shop_list = ["Penny", "Famila", "Aldi", "Growshop",
              "Kleinanzeigen", "Online Sonstiges", "Restaurant", "Tankstelle",
              "Kiosk", "Action", "Kik", "H&M",
              "Fast Food", "Werkstatt", "Paypal", "Sonstiges",
+             "McDonald's", 'Burger King',
              ]
+
+shop_list.sort()
+category_list.sort()
 
 month_list = [f"0{month}" if month < 10 else str(month) for month in range(1, 13)]
 
@@ -304,17 +308,30 @@ def open_cat_window(df, chosen_cat):
 
     cat_window = tk.Toplevel(main_window)
     cat_window.minsize(400, 500)
-    cat_window.title(f"Purchases for {chosen_cat.title()}")
+    cat_window.title(f" Category {chosen_cat.title()}")
     cat_window.config(bg="white")
 
     cat_frame = tk.Frame(cat_window, bg="white")
     cat_frame.grid(row=0, column=0)
 
-    top_label = tk.Label(cat_frame, text=f"All purchases for {chosen_cat.title()}: ", bg="white", font=FONT)
+    top_label = tk.Label(cat_frame,
+                         text=f"All purchases for {chosen_cat.title()}",
+                         bg="white",
+                         font=BOLD_FONT,
+                         fg=DARK_ORANGE_COLOR)
+
     top_label.grid(row=1, column=0, padx=20)
 
-    sum_label = tk.Label(cat_frame, text=f"Total sum: {local_cat_sum:.2f} EUR", font=FONT, bg="white")
+    sum_label = tk.Label(cat_frame,
+                         text=f"Total sum: {local_cat_sum:.2f} EUR",
+                         font=FONT,
+                         bg="white",
+                         fg=DARK_BLUE_COLOR)
+
     sum_label.grid(row=2, column=0, padx=20, pady=10, sticky="w")
+
+    empty_row = tk.Label(cat_frame, text="")
+    empty_row.grid(row=3, column=0)
 
     label_row = 4
     for index, row in df.iterrows():
@@ -665,20 +682,20 @@ def open_stats_window():
     text_label(gui_frame_2, label_to_remove, 0, 0, 0)
 
     month_menu = tk.OptionMenu(gui_frame_2, selected_month, *month_list)
-    month_menu.config(bg=orange_color, font=FONT, width=2)
+    month_menu.config(bg=ORANGE_COLOR, font=FONT, width=2)
     month_menu.grid(row=2, column=0, padx=20)
     selected_month.set(f"{current_month}")
 
     menu_1 = gui_frame_2.nametowidget(month_menu.menuname)
     menu_1.config(font=("open sans", 13))
 
-    year_entry = tk.Entry(master=gui_frame_2, justify="right", font=("courier", 16), bg=paper_color)
+    year_entry = tk.Entry(master=gui_frame_2, justify="right", font=("courier", 16), bg=PAPER_COLOR)
     year_entry.grid(row=2, column=1)
     year_entry.insert(0, str(current_year))
     year_entry.bind("<Button-1>", clear_year)
 
     category_menu = tk.OptionMenu(gui_frame_2, selected_cat_stats, *category_list)
-    category_menu.config(bg=orange_color, width=15, font=FONT)
+    category_menu.config(bg=ORANGE_COLOR, width=15, font=FONT)
     category_menu.grid(row=2, column=2, padx=30)
 
     menu_2 = gui_frame_2.nametowidget(category_menu.menuname)
@@ -688,7 +705,7 @@ def open_stats_window():
                               text="Search",
                               font=FONT,
                               command=search_stats,
-                              bg=blue_color,
+                              bg=BLUE_COLOR,
                               width=10
                               )
     search_button.grid(row=3, column=1, padx=20, pady=20)
@@ -696,7 +713,7 @@ def open_stats_window():
     reset_button = tk.Button(master=gui_frame_2,
                              text="RESET",
                              font=FONT,
-                             bg=red_color,
+                             bg=RED_COLOR,
                              width=10,
                              command=reset_entries,
                              )
@@ -792,13 +809,13 @@ else:
                                )
     last_entry_text.grid(row=4, column=2, columnspan=3)
 
-item_entry = tk.Entry(master=gui_frame, justify="right", font=FONT, bg=paper_color)
+item_entry = tk.Entry(master=gui_frame, justify="right", font=FONT, bg=PAPER_COLOR)
 item_entry.grid(row=2, column=1, padx=10)
 
-cost_entry = tk.Entry(master=gui_frame, justify="right", font=("courier", 20), bg=paper_color, width=8)
+cost_entry = tk.Entry(master=gui_frame, justify="right", font=("courier", 20), bg=PAPER_COLOR, width=8)
 cost_entry.grid(row=2, column=2)
 
-date_entry = tk.Entry(master=gui_frame, font=("courier", 15), justify="right", bg=paper_color, width=14)
+date_entry = tk.Entry(master=gui_frame, font=("courier", 15), justify="right", bg=PAPER_COLOR, width=14)
 date_entry.grid(row=2, column=7, padx=10)
 date_entry.insert(1, current_date)
 
@@ -806,7 +823,7 @@ save_button = tk.Button(master=gui_frame,
                         text="SAVE",
                         font=FONT,
                         command=save_data,
-                        bg=green_color,
+                        bg=GREEN_COLOR,
                         width=20,
                         )
 save_button.grid(row=3, column=2, pady=40, columnspan=3)
@@ -815,7 +832,7 @@ stats_button = tk.Button(master=gui_frame,
                          text="Statistics",
                          font=FONT,
                          command=open_stats_window,
-                         bg=blue_color,
+                         bg=BLUE_COLOR,
                          width=25,
                          )
 stats_button.grid(row=5, column=2, pady=50, columnspan=3)
@@ -825,14 +842,14 @@ stats_button.grid(row=5, column=2, pady=50, columnspan=3)
 # fixed_button.grid(row=5, column=3)
 
 drop_down_cat = tk.OptionMenu(gui_frame, selected_category, *category_list)
-drop_down_cat.config(bg=orange_color, font=FONT, width=6)
+drop_down_cat.config(bg=ORANGE_COLOR, font=FONT, width=6)
 drop_down_cat.grid(row=2, column=4)
 
 menu_3 = gui_frame.nametowidget(drop_down_cat.menuname)
 menu_3.config(font=FONT)
 
 drop_down_shop = tk.OptionMenu(gui_frame, selected_shop, *shop_list)
-drop_down_shop.config(bg=orange_color, font=FONT, width=6)
+drop_down_shop.config(bg=ORANGE_COLOR, font=FONT, width=6)
 drop_down_shop.grid(row=2, column=3, padx=10)
 
 menu_4 = gui_frame.nametowidget(drop_down_shop.menuname)
