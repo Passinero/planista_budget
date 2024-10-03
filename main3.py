@@ -35,9 +35,9 @@ current_month = date.today().month
 current_year = date.today().year
 
 category_list = ["Lebensmittel", "Haushalt", "Kleidung", "Elektronik", "Pflanzen",
-                 "Fast Food", "Ausbildung", "Haustier", "Tabakwaren",
+                 "Fast Food", "Ausbildung", "Fluff", "Tabakwaren",
                  "Auto", "Alkohol", "Restaurant", "Gluecksspiel",
-                 "Tanken", "Geschenke", "Arbeit",
+                 "Tanken", "Geschenke", "Arbeit", "Daniela",
                  "Post", "Bueroartikel", "Urlaub", "Sonstiges",
                  ]
 
