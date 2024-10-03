@@ -38,7 +38,7 @@ category_list = ["Lebensmittel", "Haushalt", "Kleidung", "Elektronik", "Pflanzen
                  "Fast Food", "Ausbildung", "Fluff", "Tabakwaren",
                  "Auto", "Alkohol", "Restaurant", "gluecksspiel",
                  "Tanken", "Geschenke", "Arbeit", "Daniela",
-                 "Post", "Sonstiges",
+                 "Post", "Bueroartikel", "Sonstiges",
                  ]
 
 shop_list = ["Penny", "Famila", "Aldi", "Growshop",
@@ -297,6 +297,46 @@ def hall_of_shame_plt(root, row, column, figsize, chosen_month):
     canvas_widget = canvas.get_tk_widget()
     canvas_widget.bind("<Button-1>", lambda event: hos_bar_chart_window())
     canvas_widget.grid(row=row, column=column)
+
+
+def open_cat_window(df, chosen_cat):
+    local_cat_sum = sum(df['price'])
+
+    cat_window = tk.Toplevel(main_window)
+    cat_window.minsize(400, 500)
+    cat_window.title(f"Purchases for {chosen_cat.title()}")
+    cat_window.config(bg="white")
+
+    cat_frame = tk.Frame(cat_window, bg="white")
+    cat_frame.grid(row=0, column=0)
+
+    top_label = tk.Label(cat_frame, text=f"All purchases for {chosen_cat.title()}: ", bg="white", font=FONT)
+    top_label.grid(row=1, column=0, padx=20)
+
+    sum_label = tk.Label(cat_frame, text=f"Total sum: {local_cat_sum:.2f} EUR", font=FONT, bg="white")
+    sum_label.grid(row=2, column=0, padx=20, pady=10, sticky="w")
+
+    label_row = 4
+    for index, row in df.iterrows():
+        raw_date = row['date'].date()
+        cat_date = raw_date.strftime("%d.%m.%Y")
+        raw_price = str(row['price']).replace(".", ",")
+        if len(raw_price.split(",")[1]) == 1:
+            raw_price = f"{raw_price}0"
+
+        item_label = tk.Label(cat_frame, text=row['item'].title(), font=("open sans", 14), bg="white")
+        item_label.grid(row=label_row, column=0, padx=20, sticky="w")
+
+        price_label = tk.Label(cat_frame, text=f"{raw_price} EUR", font=("open sans", 14), bg="white")
+        price_label.grid(row=label_row, column=1, padx=20, sticky="e")
+
+        shop_label = tk.Label(cat_frame, text=row['shop'].title(), font=("open sans", 14), bg="white")
+        shop_label.grid(row=label_row, column=2, padx=20, sticky="w")
+
+        date_label = tk.Label(cat_frame, text=cat_date, font=("open sans", 14), bg="white")
+        date_label.grid(row=label_row, column=3, padx=20, sticky="w")
+
+        label_row += 1
 
 
 def open_stats_window():
@@ -558,10 +598,12 @@ def open_stats_window():
 
         # wenn Kategorie gewaehlt wurde
         else:
+
             cat_df2 = search_df[search_df["category"] == chosen_cat]
             cat_df_month = cat_df2[(cat_df2["date"].dt.month == chosen_month) &
                                    (cat_df2["date"].dt.year == chosen_year)]
             cat_df_year = cat_df2[cat_df2["date"].dt.year == chosen_year]
+            open_cat_window(cat_df_month, chosen_cat)
             # when nothing was chosen
             if chosen_month == 0 and not chosen_year:
                 # cat_df3 = overall_stats_df[overall_stats_df['category'] == chosen_cat]
@@ -698,7 +740,7 @@ def open_stats_window():
 # MAIN WINDOW UI
 
 main_window = tk.Tk()
-main_window.minsize(750, 500)
+main_window.minsize(600, 600)
 main_window.config(bg="white")
 main_window.title("PLANISTA")
 
@@ -777,6 +819,10 @@ stats_button = tk.Button(master=gui_frame,
                          width=25,
                          )
 stats_button.grid(row=5, column=2, pady=50, columnspan=3)
+
+# fixed_button = tk.Button(text="Add fixed costs",
+#                          bg=red_color)
+# fixed_button.grid(row=5, column=3)
 
 drop_down_cat = tk.OptionMenu(gui_frame, selected_category, *category_list)
 drop_down_cat.config(bg=orange_color, font=FONT, width=6)
