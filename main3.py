@@ -31,6 +31,7 @@ color_list = [ORANGE_COLOR, DARK_ORANGE_COLOR, BLUE_COLOR, DARK_COLOR,
               ]
 
 current_date = date.today().strftime("%d.%m.%Y")
+current_day = date.today().day
 current_month = date.today().month
 current_year = date.today().year
 
@@ -38,7 +39,7 @@ category_list = ["Lebensmittel", "Haushalt", "Kleidung", "Elektronik", "Pflanzen
                  "Fast Food", "Ausbildung", "Fluff", "Tabakwaren",
                  "Auto", "Alkohol", "Restaurant", "Gluecksspiel",
                  "Tanken", "Geschenke", "Arbeit", "Daniela",
-                 "Post", "Bueroartikel", "Urlaub", "Sonstiges",
+                 "Post", "Bueroartikel", "Urlaub", "Sonstiges", "Fixkosten",
                  ]
 
 shop_list = ["Penny", "Famila", "Aldi", "Growshop",
@@ -67,6 +68,19 @@ cat_dict = {}
 
 dataframe = pandas.read_csv("planista_database.csv")
 dataframe["date"] = pandas.to_datetime(dataframe["date"], format="%d.%m.%Y")
+
+fixed_df = pandas.read_csv("fixed_cost.csv")
+sum_fixed_costs = sum(fixed_df['price'])
+
+if current_day == 1:
+    new_data = pandas.DataFrame({"item": ["fixkosten"],
+                                 "shop": ["-"],
+                                 "category": ["fixkosten"],
+                                 "price": [sum_fixed_costs],
+                                 "date": [current_date],
+                                 })
+
+    new_data.to_csv("planista_database.csv", mode="a", index=False, header=False)
 
 current_month_df = dataframe[dataframe["date"].dt.month == current_month]
 
@@ -133,14 +147,14 @@ def save_data():
         messagebox.showerror("error", "The price is not right")
         return
 
-    new_data = pandas.DataFrame({"item": [item],
-                                 "shop": [shop],
-                                 "category": [category],
-                                 "price": [price],
-                                 "date": [curr_date],
-                                 })
+    new_data_save = pandas.DataFrame({"item": [item],
+                                      "shop": [shop],
+                                      "category": [category],
+                                      "price": [price],
+                                      "date": [curr_date],
+                                      })
 
-    new_data.to_csv("planista_database.csv", mode="a", index=False, header=False)
+    new_data_save.to_csv("planista_database.csv", mode="a", index=False, header=False)
 
     item_entry.delete(0, tk.END)
     cost_entry.delete(0, tk.END)
@@ -149,7 +163,7 @@ def save_data():
     selected_category.set("---")
     selected_shop.set("---")
 
-    hall_of_shame_plt(main_window, 7, 0, (5,4), current_month)
+    hall_of_shame_plt(main_window, 7, 0, (5, 4), current_month, current_year)
 
     update_last_entry()
     main_window.update()
@@ -159,6 +173,9 @@ def save_data():
 def plt_window_1(values, labels, title):
     labels = labels.tolist()
     labels = [label.title() for label in labels]
+
+    label_pair = sorted(zip(values, labels), reverse=True)
+    values, labels = zip(*label_pair)
 
     plt_window = tk.Toplevel(main_window)
     plt_window.minsize(400, 400)
@@ -181,9 +198,40 @@ def plt_window_1(values, labels, title):
     canvas.get_tk_widget().pack(side=tk.LEFT)
 
 
-def hall_of_shame_plt(root, row, column, figsize, chosen_month):
+def hall_of_shame_plt(root, row, column, figsize, chosen_month, chosen_year):
 
     global bad_stuff_list, bad_stuff_values
+
+    def fill_bad_stuff_list(df):
+        global bad_stuff_list, bad_stuff_values
+
+        tupel_list = []
+
+        hos_sums = df.groupby('category')['price'].sum()
+
+        alc = hos_sums.get('alkohol', 0)
+        fastfood = hos_sums.get('fast food', 0)
+        gambling = hos_sums.get('gluecksspiel', 0)
+        tobacco = hos_sums.get('tabakwaren', 0)
+
+        if alc:
+            tupel_list.append(("Alkohol", alc))
+        if fastfood:
+            tupel_list.append(("Fast Food", fastfood))
+        if gambling:
+            tupel_list.append(("Gluecksspiel", gambling))
+        if tobacco:
+            tupel_list.append(("Tabakwaren", tobacco))
+
+        bad_sum = alc + fastfood + gambling + tobacco
+
+        tupel_list.sort(key=lambda x: x[1])
+
+        for pair in tupel_list:
+            bad_stuff_list.append(pair[0])
+            bad_stuff_values.append(pair[1])
+
+        return bad_sum
 
     def hos_bar_chart_window():
 
@@ -238,43 +286,32 @@ def hall_of_shame_plt(root, row, column, figsize, chosen_month):
     hos_df = pandas.read_csv("planista_database.csv")
     hos_df["date"] = pandas.to_datetime(hos_df["date"], format="%d.%m.%Y")
 
-    hos_month_df = hos_df[hos_df["date"].dt.month == chosen_month]
-
     if chosen_month == 1:
         last_month = 12
     else:
         last_month = chosen_month - 1
 
+    hos_month_df = hos_df[hos_df["date"].dt.month == chosen_month]
     hos_last_month_df = hos_df[hos_df["date"].dt.month == last_month]
+    hos_year_df = hos_df[hos_df['date'].dt.year == chosen_year]
 
     hos_cat_sums = hos_month_df.groupby("category")["price"].sum()
     hos_last_month_cat_sums = hos_last_month_df.groupby("category")["price"].sum()
 
-    alc_sum = hos_cat_sums.get("alkohol", 0)
-    fastfood_sum = hos_cat_sums.get("fast food", 0)
-    gambling_sum = hos_cat_sums.get("gluecksspiel", 0)
-    tobacco_sum = hos_cat_sums.get("tabakwaren", 0)
+    if chosen_month == 0 and chosen_year == 0:
+        month_name = ""
+        curr_year = "Overall"
+        hos_sum = fill_bad_stuff_list(hos_df)
 
-    tupel_list = []
+    elif chosen_month == 0:
+        month_name = ""
+        curr_year = current_year
+        hos_sum = fill_bad_stuff_list(hos_year_df)
 
-    if alc_sum:
-        tupel_list.append(("Alkohol", alc_sum))
-
-    if fastfood_sum:
-        tupel_list.append(("Fast Food", fastfood_sum))
-
-    if gambling_sum:
-        tupel_list.append(("gluecksspiel", gambling_sum))
-
-    if tobacco_sum:
-        tupel_list.append(("Tabakwaren", tobacco_sum))
-
-    hos_sum = alc_sum + gambling_sum + tobacco_sum + fastfood_sum
-    tupel_list.sort(key=lambda x: x[1])
-
-    for pair in tupel_list:
-        bad_stuff_list.append(pair[0])
-        bad_stuff_values.append(pair[1])
+    else:
+        month_name = month_dict[chosen_month]
+        curr_year = current_year
+        hos_sum = fill_bad_stuff_list(hos_month_df)
 
     chart_frame = tk.Frame(root)
     chart_frame.grid(row=row, column=column)
@@ -286,11 +323,11 @@ def hall_of_shame_plt(root, row, column, figsize, chosen_month):
                labels=bad_stuff_list,
                colors=color_list,
                autopct=lambda p: f'{p * sum(bad_stuff_values) / 100 :.0f} EUR')
-        ax.set_title(f"Hall of Shame {month_dict[chosen_month]} {current_year} - {round(hos_sum, 2)} EUR")
+        ax.set_title(f"Hall of Shame {month_name} {curr_year} - {round(hos_sum, 2)} EUR")
 
     else:
         ax.pie([1], labels=["No data"], colors=['gray'])
-        ax.set_title(f"Hall of Shame {month_dict[chosen_month]} {current_year} - No data")
+        ax.set_title(f"Hall of Shame {month_name} {current_year} - No data")
 
     ax.set_aspect('equal')
 
@@ -303,11 +340,109 @@ def hall_of_shame_plt(root, row, column, figsize, chosen_month):
     canvas_widget.grid(row=row, column=column)
 
 
+def open_fixed_window():
+
+    def add_more_entries():
+        curr_row = len(entry_list) + 4
+
+        new_cat_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
+        new_cat_entry.grid(row=curr_row, column=0, padx=20)
+
+        new_price_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR, width=5)
+        new_price_entry.grid(row=curr_row, column=1, sticky="w")
+        entry_list.append((new_cat_entry, new_price_entry))
+
+        add_more_button.grid(row=curr_row + 4, column=0, padx=20, pady=10)
+
+    def save_fixed_data():
+        new_data_fixed = {"category": [],
+                          "price": [],
+                          }
+
+        for entries in entry_list:
+            cat_value = entries[0].get()
+            price_value = entries[1].get()
+
+            new_data_fixed['category'].append(cat_value)
+            new_data_fixed['price'].append(price_value)
+
+        new_df = pandas.DataFrame(new_data_fixed)
+        new_df.to_csv("fixed_cost.csv", index=False)
+
+    fixed_window = tk.Toplevel(main_window)
+    fixed_window.minsize(400, 500)
+    fixed_window.title("Add your fixed costs")
+    fixed_window.config(bg="white")
+
+    top_label = tk.Label(fixed_window,
+                         text="Add your fixed costs below:",
+                         fg=DARK_ORANGE_COLOR,
+                         bg="white",
+                         font=BOLD_FONT,
+                         )
+    top_label.grid(row=0, column=0, padx=20, columnspan=2)
+
+    rent_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
+    rent_entry.grid(row=3, column=0, padx=10)
+    rent_entry.insert(0, "Rent")
+
+    rent_price_entry = tk.Entry(fixed_window, font=FONT, width=5, bg=PAPER_COLOR)
+    rent_price_entry.grid(row=3, column=1, sticky="w")
+
+    elec_entry = tk.Entry(fixed_window, font=FONT, bg=PAPER_COLOR)
+    elec_entry.grid(row=4, column=0)
+    elec_entry.insert(0, "Electricity")
+
+    elec_price_entry = tk.Entry(fixed_window, font=FONT, width=5, bg=PAPER_COLOR)
+    elec_price_entry.grid(row=4, column=1, sticky="w")
+
+    telephone_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
+    telephone_entry.grid(row=5, column=0, padx=20)
+    telephone_entry.insert(0, "Telephone / Internet")
+
+    tel_price_entry = tk.Entry(fixed_window, font=FONT, width=5, bg=PAPER_COLOR)
+    tel_price_entry.grid(row=5, column=1, sticky="w")
+
+    transport_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
+    transport_entry.grid(row=6, column=0, padx=20)
+    transport_entry.insert(0, "Public Transport")
+
+    trans_price_entry = tk.Entry(fixed_window, font=FONT, width=5, bg=PAPER_COLOR)
+    trans_price_entry.grid(row=6, column=1, sticky="w")
+
+    insurance_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
+    insurance_entry.grid(row=7, column=0, padx=20)
+    insurance_entry.insert(0, "Insurance")
+
+    ins_price_entry = tk.Entry(fixed_window, font=FONT, width=5, bg=PAPER_COLOR)
+    ins_price_entry.grid(row=7, column=1, sticky="w")
+
+    streaming_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
+    streaming_entry.grid(row=8, column=0, padx=20)
+    streaming_entry.insert(0, "Streaming")
+
+    stream_price_entry = tk.Entry(fixed_window, font=FONT, width=5, bg=PAPER_COLOR)
+    stream_price_entry.grid(row=8, column=1, sticky="w")
+
+    entry_list = [(rent_entry, rent_price_entry), (elec_entry, elec_price_entry), (telephone_entry, tel_price_entry),
+                  (insurance_entry, ins_price_entry), (transport_entry, trans_price_entry),
+                  (streaming_entry, stream_price_entry)]
+
+    save_button_2 = tk.Button(master=fixed_window, text="SAVE", font=FONT, bg=GREEN_COLOR, command=save_fixed_data)
+    save_button_2.grid(row=1, column=0, padx=20, pady=20, sticky="w")
+
+    empty_row = tk.Label(fixed_window, text="", font=FONT, bg="white")
+    empty_row.grid(row=9, column=0)
+
+    add_more_button = tk.Button(master=fixed_window, text="+ add more", command=add_more_entries, font=FONT)
+    add_more_button.grid(row=10, column=0)
+
+
 def open_cat_window(df, chosen_cat):
     local_cat_sum = sum(df['price'])
 
     cat_window = tk.Toplevel(main_window)
-    cat_window.minsize(400, 500)
+    cat_window.minsize(400, 800)
     cat_window.title(f" Category {chosen_cat.title()}")
     cat_window.config(bg="white")
 
@@ -330,7 +465,7 @@ def open_cat_window(df, chosen_cat):
 
     sum_label.grid(row=2, column=0, padx=20, pady=10, sticky="w")
 
-    empty_row = tk.Label(cat_frame, text="")
+    empty_row = tk.Label(cat_frame, text="", bg="white")
     empty_row.grid(row=3, column=0)
 
     label_row = 4
@@ -347,7 +482,7 @@ def open_cat_window(df, chosen_cat):
         price_label = tk.Label(cat_frame, text=f"{raw_price} EUR", font=("open sans", 14), bg="white")
         price_label.grid(row=label_row, column=1, padx=20, sticky="e")
 
-        shop_label = tk.Label(cat_frame, text=row['shop'].title(), font=("open sans", 14), bg="white")
+        shop_label = tk.Label(cat_frame, text=row['shop'].upper(), font=("open sans", 14), bg="white")
         shop_label.grid(row=label_row, column=2, padx=20, sticky="w")
 
         date_label = tk.Label(cat_frame, text=cat_date, font=("open sans", 14), bg="white")
@@ -365,7 +500,6 @@ def open_stats_window():
     overall_stats_df = pandas.read_csv("planista_database.csv")
     overall_stats_df["date"] = pandas.to_datetime(overall_stats_df["date"], format="%d.%m.%Y")
     overall_curr_month_df = overall_stats_df[overall_stats_df["date"].dt.month == current_month]
-    overall_sum = round(sum(overall_stats_df["price"]), 2)
     sum_current_month = sum(overall_curr_month_df["price"])
     sum_last_month = sum(last_month_df["price"])
 
@@ -390,9 +524,17 @@ def open_stats_window():
             sorted_labels.append(comb_name)
             sorted_values.append(round(comb_shop_perc))
 
+        sorted_pairs = sorted(zip(sorted_values, sorted_labels), reverse=True)
+
+        sorted_values, sorted_labels = zip(*sorted_pairs)
+
         return sorted_values, sorted_labels
 
-    def small_plt(root, value_list, label_list, title, row, column, orig_values, orig_labels):
+    def small_plt(root, title, row, column, orig_values, orig_labels):
+
+        extr_values, extr_labels = extract_shop_category(orig_values, orig_labels)
+
+        extr_labels = [label.title() for label in extr_labels]
 
         chart_frame = tk.Frame(root)
         chart_frame.grid(row=row, column=column)
@@ -400,7 +542,7 @@ def open_stats_window():
         fig, ax = plt.subplots(figsize=(4, 3))
 
         ax.set_aspect('equal')
-        ax.pie(value_list, labels=label_list, autopct="%1.1f%%", colors=color_list)
+        ax.pie(extr_values, labels=extr_labels, autopct="%1.1f%%", colors=color_list)
         ax.set_title(title)
 
         canvas = FigureCanvasTkAgg(fig, master=chart_frame)
@@ -417,39 +559,32 @@ def open_stats_window():
 
     def reset_entries():
         global label_to_remove
+
         selected_month.set("")
         selected_cat_stats.set("")
+
+        entries_year = overall_stats_df[overall_stats_df['date'].dt.year == current_year]
+
+        total_sum_per_year = sum(entries_year['price'])
 
         for label in label_to_remove:
             label.config(text="")
 
-        total_purchases.config(text=f"Total purchases: {len(overall_stats_df['item'])}\n"
-                                    f"Total cost: {overall_sum} EUR")
-
-        new_cat_text = tk.Label(master=gui_frame_2,
-                                text=f"All Transactions",
-                                font=("open sans", 18, "bold"),
-                                bg="white"
-                                )
-        new_cat_text.grid(row=4, column=1, pady=10)
-        label_to_remove.append(new_cat_text)
-
         year_entry.delete(0, tk.END)
         year_entry.insert(0, str(current_year))
 
-        extr_values, extr_labels = extract_shop_category(start_shop_sums.values, start_shop_sums.index)
+        shop_sums = entries_year.groupby("shop")["price"].sum()
+        cat_sums = entries_year.groupby("category")["price"].sum()
+        total_purchases.config(text=f"Total purchases: {len(entries_year)}\n"
+                                    f"Total cost: {round(total_sum_per_year, 2):.2f} EUR")
 
-        extr_labels = [label.title() for label in extr_labels]
+        text_label(gui_frame_2, label_to_remove, 0, 0, current_year)
 
-        small_plt(gui_frame_2, extr_values, extr_labels,
-                  "Overall Shops", 8, 0, start_shop_sums.values, start_shop_sums.index)
+        small_plt(gui_frame_2, f"Shops for {current_year}", 8, 0, shop_sums.values, shop_sums.index)
 
-        extr_values2, extr_labels2 = extract_shop_category(start_cat_sums.values, start_cat_sums.index)
+        hall_of_shame_plt(stats_window, 9, 0, (4, 3), 0, current_year)
 
-        extr_labels2 = [label.title() for label in extr_labels2]
-
-        small_plt(gui_frame_2, extr_values2, extr_labels2,
-                  "Overall Categories", 8, 2, start_cat_sums.values, start_cat_sums.index)
+        small_plt(gui_frame_2, f"Categories for {current_year}", 8, 2, cat_sums.values, cat_sums.index)
 
     def clear_year(event):
         """ clears the year entry widget """
@@ -458,12 +593,13 @@ def open_stats_window():
 
     def percentage_deviation(sum_curr, sum_last):
         try:
-            perc_dev = round(sum_curr / (sum_last / 100) - 100, 2)
+            perc_devi = round(sum_curr / (sum_last / 100) - 100, 2)
         except ZeroDivisionError:
-            perc_dev = "100"
+            perc_devi = "100"
 
-        return perc_dev
+        return perc_devi
 
+    # small PLTs zum jeweiligen monat ändern, auch wenn eine kategorie gewählt wurde
     def search_stats():
         global cat_dict, label_to_remove
 
@@ -516,28 +652,17 @@ def open_stats_window():
 
                 overall_shopsums = search_df.groupby("shop")["price"].sum()
                 overall_catsums = search_df.groupby("category")["price"].sum()
-                perc_dev = percentage_deviation(sum_current_month, sum_last_month)
+                # perc_dev = percentage_deviation(sum_current_month, sum_last_month)
                 total_purchases.config(text=f"Total purchases: {len(overall_stats_df['price'])}\n"
-                                            f"Total cost: {round(sum(overall_stats_df['price']), 2):.2f} EUR\n"
-                                            f"Difference last month: {perc_dev} %")
+                                            f"Total cost: {round(sum(overall_stats_df['price']), 2):.2f} EUR")
 
                 text_label(gui_frame_2, label_to_remove, 0, 0, 0)
 
-                extr_values, extr_labels = extract_shop_category(overall_shopsums.values, overall_shopsums.index)
+                small_plt(gui_frame_2, f"Overall Shops", 8, 0, overall_shopsums.values, overall_shopsums.index)
 
-                extr_labels = [label.title() for label in extr_labels]
+                hall_of_shame_plt(stats_window, 9, 0, (4, 3), 0, 0)
 
-                small_plt(gui_frame_2, extr_values, extr_labels,
-                          f"Overall Shops", 8, 0,
-                          overall_shopsums.values, overall_shopsums.index)
-
-                extr_values2, extr_labels2 = extract_shop_category(overall_catsums.values, overall_catsums.index)
-
-                extr_labels2 = [label.title() for label in extr_labels2]
-
-                small_plt(gui_frame_2, extr_values2, extr_labels2,
-                          f"Overall Categories", 8, 2,
-                          overall_catsums.values, overall_catsums.index)
+                small_plt(gui_frame_2, f"Overall Categories", 8, 2, overall_catsums.values, overall_catsums.index)
 
             # wenn Monat gewaehlt wurde
             elif chosen_month > 0 and chosen_year != 0:
@@ -551,23 +676,11 @@ def open_stats_window():
 
                 text_label(gui_frame_2, label_to_remove, 0, chosen_month, chosen_year)
 
-                extr_values, extr_labels = extract_shop_category(shop_sums.values, shop_sums.index)
+                small_plt(gui_frame_2, f"Shops for {month_dict[chosen_month]} {chosen_year}", 8, 0, shop_sums.values, shop_sums.index)
 
-                extr_labels = [label.title() for label in extr_labels]
+                hall_of_shame_plt(stats_window, 9, 0, (4, 3), chosen_month, chosen_year)
 
-                small_plt(gui_frame_2, extr_values, extr_labels,
-                          f"Shops for {month_dict[chosen_month]} {chosen_year}", 8, 0,
-                          shop_sums.values, shop_sums.index)
-
-                hall_of_shame_plt(stats_window, 9, 0, (4, 3), chosen_month)
-
-                extr_values2, extr_labels2 = extract_shop_category(cat_sums.values, cat_sums.index)
-
-                extr_labels2 = [label.title() for label in extr_labels2]
-
-                small_plt(gui_frame_2, extr_values2, extr_labels2,
-                          f"Categories for {month_dict[chosen_month]} {chosen_year}", 8, 2,
-                          cat_sums.values, cat_sums.index)
+                small_plt(gui_frame_2, f"Categories for {month_dict[chosen_month]} {chosen_year}", 8, 2, cat_sums.values, cat_sums.index)
 
             # wenn kein Jahr gewählt wurde
             elif chosen_year == 0 or chosen_month == 0 and chosen_year == 0:
@@ -576,19 +689,9 @@ def open_stats_window():
 
                 text_label(gui_frame_2, label_to_remove, 0, 0, 0)
 
-                values1, labels1 = extract_shop_category(start_shop_sums.values, start_shop_sums.index)
+                small_plt(gui_frame_2, "Overall Shops", 8, 0, start_shop_sums.values, start_shop_sums.index)
 
-                labels1 = [label.title() for label in labels1]
-
-                small_plt(gui_frame_2, values1, labels1,
-                          "Overall Shops", 8, 0, start_shop_sums.values, start_shop_sums.index)
-
-                values2, labels2 = extract_shop_category(start_cat_sums.values, start_cat_sums.index)
-
-                labels2 = [label.title() for label in labels2]
-
-                small_plt(gui_frame_2, values2, labels2,
-                          "Overall Categories", 8, 2, start_cat_sums.values, start_cat_sums.index)
+                small_plt(gui_frame_2, "Overall Categories", 8, 2, start_cat_sums.values, start_cat_sums.index)
 
             # wenn kein Monat gewaehlt wurde
             else:
@@ -599,23 +702,14 @@ def open_stats_window():
 
                 text_label(gui_frame_2, label_to_remove, 0, 0, chosen_year)
 
-                extr_values, extr_labels = extract_shop_category(shop_sums.values, shop_sums.index)
+                small_plt(gui_frame_2, f"Shops for {chosen_year}", 8, 0, shop_sums.values, shop_sums.index)
 
-                extr_labels = [label.title() for label in extr_labels]
+                hall_of_shame_plt(stats_window, 9, 0, (4, 3), 0, chosen_year)
 
-                small_plt(gui_frame_2, extr_values, extr_labels,
-                          f"Shops for {chosen_year}", 8, 0, shop_sums.values, shop_sums.index)
-
-                extr_values2, extr_labels2 = extract_shop_category(cat_sums.values, cat_sums.index)
-
-                extr_labels2 = [label.title() for label in extr_labels2]
-
-                small_plt(gui_frame_2, extr_values2, extr_labels2,
-                          f"Categories for {chosen_year}", 8, 2, cat_sums.values, cat_sums.index)
+                small_plt(gui_frame_2, f"Categories for {chosen_year}", 8, 2, cat_sums.values, cat_sums.index)
 
         # wenn Kategorie gewaehlt wurde
         else:
-
             cat_df2 = search_df[search_df["category"] == chosen_cat]
             cat_df_month = cat_df2[(cat_df2["date"].dt.month == chosen_month) &
                                    (cat_df2["date"].dt.year == chosen_year)]
@@ -715,7 +809,7 @@ def open_stats_window():
                              font=FONT,
                              bg=RED_COLOR,
                              width=10,
-                             command=reset_entries,
+                             command=lambda: reset_entries(),
                              )
     reset_button.grid(row=3, column=2)
 
@@ -735,21 +829,13 @@ def open_stats_window():
     start_shop_sums = overall_curr_month_df.groupby("shop")["price"].sum()
     start_cat_sums = overall_curr_month_df.groupby("category")["price"].sum()
 
-    values, labels = extract_shop_category(start_shop_sums.values, start_shop_sums.index)
-
-    labels = [label.title() for label in labels]
-
-    small_plt(gui_frame_2, values, labels,
+    small_plt(gui_frame_2,
               f"Shops for {month_dict[current_month]} {current_year}", 8, 0,
               start_shop_sums.values, start_shop_sums.index)
 
-    hall_of_shame_plt(stats_window, 9, 0, (4, 3), current_month)
+    hall_of_shame_plt(stats_window, 9, 0, (4, 3), current_month, current_year)
 
-    values, labels = extract_shop_category(start_cat_sums.values, start_cat_sums.index)
-
-    labels = [label.title() for label in labels]
-
-    small_plt(gui_frame_2, values, labels,
+    small_plt(gui_frame_2,
               f"Categories for {month_dict[current_month]} {current_year}", 8, 2,
               start_cat_sums.values, start_cat_sums.index)
 
@@ -824,7 +910,7 @@ save_button = tk.Button(master=gui_frame,
                         font=FONT,
                         command=save_data,
                         bg=GREEN_COLOR,
-                        width=20,
+                        width=20
                         )
 save_button.grid(row=3, column=2, pady=40, columnspan=3)
 
@@ -833,13 +919,17 @@ stats_button = tk.Button(master=gui_frame,
                          font=FONT,
                          command=open_stats_window,
                          bg=BLUE_COLOR,
-                         width=25,
+                         width=25
                          )
-stats_button.grid(row=5, column=2, pady=50, columnspan=3)
+stats_button.grid(row=5, column=3, pady=50)
 
-# fixed_button = tk.Button(text="Add fixed costs",
-#                          bg=red_color)
-# fixed_button.grid(row=5, column=3)
+fixed_button = tk.Button(master=gui_frame,
+                         text="Add fixed costs",
+                         bg=RED_COLOR,
+                         font=FONT,
+                         command=open_fixed_window,
+                         )
+fixed_button.grid(row=3, column=4, pady=50, columnspan=2)
 
 drop_down_cat = tk.OptionMenu(gui_frame, selected_category, *category_list)
 drop_down_cat.config(bg=ORANGE_COLOR, font=FONT, width=6)
@@ -855,7 +945,7 @@ drop_down_shop.grid(row=2, column=3, padx=10)
 menu_4 = gui_frame.nametowidget(drop_down_shop.menuname)
 menu_4.config(font=FONT)
 
-hall_of_shame_plt(main_window, 7, 0, (5, 4), current_month)
+hall_of_shame_plt(main_window, 7, 0, (5, 4), current_month, current_year)
 
 update_last_entry()
 
