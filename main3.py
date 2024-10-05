@@ -340,102 +340,102 @@ def hall_of_shame_plt(root, row, column, figsize, chosen_month, chosen_year):
     canvas_widget.grid(row=row, column=column)
 
 
-def open_fixed_window():
-
-    def add_more_entries():
-        curr_row = len(entry_list) + 4
-
-        new_cat_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
-        new_cat_entry.grid(row=curr_row, column=0, padx=20)
-
-        new_price_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR, width=5)
-        new_price_entry.grid(row=curr_row, column=1, sticky="w")
-        entry_list.append((new_cat_entry, new_price_entry))
-
-        add_more_button.grid(row=curr_row + 4, column=0, padx=20, pady=10)
-
-    def save_fixed_data():
-        new_data_fixed = {"category": [],
-                          "price": [],
-                          }
-
-        for entries in entry_list:
-            cat_value = entries[0].get()
-            price_value = entries[1].get()
-
-            new_data_fixed['category'].append(cat_value)
-            new_data_fixed['price'].append(price_value)
-
-        new_df = pandas.DataFrame(new_data_fixed)
-        new_df.to_csv("fixed_cost.csv", index=False)
-
-    fixed_window = tk.Toplevel(main_window)
-    fixed_window.minsize(400, 500)
-    fixed_window.title("Add your fixed costs")
-    fixed_window.config(bg="white")
-
-    top_label = tk.Label(fixed_window,
-                         text="Add your fixed costs below:",
-                         fg=DARK_ORANGE_COLOR,
-                         bg="white",
-                         font=BOLD_FONT,
-                         )
-    top_label.grid(row=0, column=0, padx=20, columnspan=2)
-
-    rent_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
-    rent_entry.grid(row=3, column=0, padx=10)
-    rent_entry.insert(0, "Rent")
-
-    rent_price_entry = tk.Entry(fixed_window, font=FONT, width=5, bg=PAPER_COLOR)
-    rent_price_entry.grid(row=3, column=1, sticky="w")
-
-    elec_entry = tk.Entry(fixed_window, font=FONT, bg=PAPER_COLOR)
-    elec_entry.grid(row=4, column=0)
-    elec_entry.insert(0, "Electricity")
-
-    elec_price_entry = tk.Entry(fixed_window, font=FONT, width=5, bg=PAPER_COLOR)
-    elec_price_entry.grid(row=4, column=1, sticky="w")
-
-    telephone_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
-    telephone_entry.grid(row=5, column=0, padx=20)
-    telephone_entry.insert(0, "Telephone / Internet")
-
-    tel_price_entry = tk.Entry(fixed_window, font=FONT, width=5, bg=PAPER_COLOR)
-    tel_price_entry.grid(row=5, column=1, sticky="w")
-
-    transport_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
-    transport_entry.grid(row=6, column=0, padx=20)
-    transport_entry.insert(0, "Public Transport")
-
-    trans_price_entry = tk.Entry(fixed_window, font=FONT, width=5, bg=PAPER_COLOR)
-    trans_price_entry.grid(row=6, column=1, sticky="w")
-
-    insurance_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
-    insurance_entry.grid(row=7, column=0, padx=20)
-    insurance_entry.insert(0, "Insurance")
-
-    ins_price_entry = tk.Entry(fixed_window, font=FONT, width=5, bg=PAPER_COLOR)
-    ins_price_entry.grid(row=7, column=1, sticky="w")
-
-    streaming_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
-    streaming_entry.grid(row=8, column=0, padx=20)
-    streaming_entry.insert(0, "Streaming")
-
-    stream_price_entry = tk.Entry(fixed_window, font=FONT, width=5, bg=PAPER_COLOR)
-    stream_price_entry.grid(row=8, column=1, sticky="w")
-
-    entry_list = [(rent_entry, rent_price_entry), (elec_entry, elec_price_entry), (telephone_entry, tel_price_entry),
-                  (insurance_entry, ins_price_entry), (transport_entry, trans_price_entry),
-                  (streaming_entry, stream_price_entry)]
-
-    save_button_2 = tk.Button(master=fixed_window, text="SAVE", font=FONT, bg=GREEN_COLOR, command=save_fixed_data)
-    save_button_2.grid(row=1, column=0, padx=20, pady=20, sticky="w")
-
-    empty_row = tk.Label(fixed_window, text="", font=FONT, bg="white")
-    empty_row.grid(row=9, column=0)
-
-    add_more_button = tk.Button(master=fixed_window, text="+ add more", command=add_more_entries, font=FONT)
-    add_more_button.grid(row=10, column=0)
+# def open_fixed_window():
+#
+#     def add_more_entries():
+#         curr_row = len(entry_list) + 4
+#
+#         new_cat_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
+#         new_cat_entry.grid(row=curr_row, column=0, padx=20)
+#
+#         new_price_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR, width=5)
+#         new_price_entry.grid(row=curr_row, column=1, sticky="w")
+#         entry_list.append((new_cat_entry, new_price_entry))
+#
+#         add_more_button.grid(row=curr_row + 4, column=0, padx=20, pady=10)
+#
+#     def save_fixed_data():
+#         new_data_fixed = {"category": [],
+#                           "price": [],
+#                           }
+#
+#         for entries in entry_list:
+#             cat_value = entries[0].get()
+#             price_value = entries[1].get()
+#
+#             new_data_fixed['category'].append(cat_value)
+#             new_data_fixed['price'].append(price_value)
+#
+#         new_df = pandas.DataFrame(new_data_fixed)
+#         new_df.to_csv("fixed_cost.csv", index=False)
+#
+#     fixed_window = tk.Toplevel(main_window)
+#     fixed_window.minsize(400, 500)
+#     fixed_window.title("Add your fixed costs")
+#     fixed_window.config(bg="white")
+#
+#     top_label = tk.Label(fixed_window,
+#                          text="Add your fixed costs below:",
+#                          fg=DARK_ORANGE_COLOR,
+#                          bg="white",
+#                          font=BOLD_FONT,
+#                          )
+#     top_label.grid(row=0, column=0, padx=20, columnspan=2)
+#
+#     rent_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
+#     rent_entry.grid(row=3, column=0, padx=10)
+#     rent_entry.insert(0, "Rent")
+#
+#     rent_price_entry = tk.Entry(fixed_window, font=FONT, width=5, bg=PAPER_COLOR)
+#     rent_price_entry.grid(row=3, column=1, sticky="w")
+#
+#     elec_entry = tk.Entry(fixed_window, font=FONT, bg=PAPER_COLOR)
+#     elec_entry.grid(row=4, column=0)
+#     elec_entry.insert(0, "Electricity")
+#
+#     elec_price_entry = tk.Entry(fixed_window, font=FONT, width=5, bg=PAPER_COLOR)
+#     elec_price_entry.grid(row=4, column=1, sticky="w")
+#
+#     telephone_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
+#     telephone_entry.grid(row=5, column=0, padx=20)
+#     telephone_entry.insert(0, "Telephone / Internet")
+#
+#     tel_price_entry = tk.Entry(fixed_window, font=FONT, width=5, bg=PAPER_COLOR)
+#     tel_price_entry.grid(row=5, column=1, sticky="w")
+#
+#     transport_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
+#     transport_entry.grid(row=6, column=0, padx=20)
+#     transport_entry.insert(0, "Public Transport")
+#
+#     trans_price_entry = tk.Entry(fixed_window, font=FONT, width=5, bg=PAPER_COLOR)
+#     trans_price_entry.grid(row=6, column=1, sticky="w")
+#
+#     insurance_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
+#     insurance_entry.grid(row=7, column=0, padx=20)
+#     insurance_entry.insert(0, "Insurance")
+#
+#     ins_price_entry = tk.Entry(fixed_window, font=FONT, width=5, bg=PAPER_COLOR)
+#     ins_price_entry.grid(row=7, column=1, sticky="w")
+#
+#     streaming_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
+#     streaming_entry.grid(row=8, column=0, padx=20)
+#     streaming_entry.insert(0, "Streaming")
+#
+#     stream_price_entry = tk.Entry(fixed_window, font=FONT, width=5, bg=PAPER_COLOR)
+#     stream_price_entry.grid(row=8, column=1, sticky="w")
+#
+#     entry_list = [(rent_entry, rent_price_entry), (elec_entry, elec_price_entry), (telephone_entry, tel_price_entry),
+#                   (insurance_entry, ins_price_entry), (transport_entry, trans_price_entry),
+#                   (streaming_entry, stream_price_entry)]
+#
+#     save_button_2 = tk.Button(master=fixed_window, text="SAVE", font=FONT, bg=GREEN_COLOR, command=save_fixed_data)
+#     save_button_2.grid(row=1, column=0, padx=20, pady=20, sticky="w")
+#
+#     empty_row = tk.Label(fixed_window, text="", font=FONT, bg="white")
+#     empty_row.grid(row=9, column=0)
+#
+#     add_more_button = tk.Button(master=fixed_window, text="+ add more", command=add_more_entries, font=FONT)
+#     add_more_button.grid(row=10, column=0)
 
 
 def open_cat_window(df, chosen_cat):
@@ -923,13 +923,13 @@ stats_button = tk.Button(master=gui_frame,
                          )
 stats_button.grid(row=5, column=3, pady=50)
 
-fixed_button = tk.Button(master=gui_frame,
-                         text="Add fixed costs",
-                         bg=RED_COLOR,
-                         font=FONT,
-                         command=open_fixed_window,
-                         )
-fixed_button.grid(row=3, column=4, pady=50, columnspan=2)
+# fixed_button = tk.Button(master=gui_frame,
+#                          text="Add fixed costs",
+#                          bg=RED_COLOR,
+#                          font=FONT,
+#                          command=open_fixed_window,
+#                          )
+# fixed_button.grid(row=3, column=4, pady=50, columnspan=2)
 
 drop_down_cat = tk.OptionMenu(gui_frame, selected_category, *category_list)
 drop_down_cat.config(bg=ORANGE_COLOR, font=FONT, width=6)
