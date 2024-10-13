@@ -1,8 +1,8 @@
 category_list = ["Lebensmittel", "Haushalt", "Kleidung", "Elektronik", "Pflanzen",
-                 "Fast Food", "Ausbildung", "Fluff", "Tabakwaren",
+                 "Fast Food", "Ausbildung", "Tabakwaren",
                  "Auto", "Alkohol", "Restaurant", "Gluecksspiel",
-                 "Tanken", "Geschenke", "Arbeit", "Daniela",
-                 "Post", "Bueroartikel", "Urlaub", "Sonstiges", "Fixkosten",
+                 "Tanken", "Geschenke", "Arbeit", "Post",
+                 "Bueroartikel", "Urlaub", "Sonstiges", "Fixkosten",
                  ]
 
 shop_list = ["Penny", "Famila", "Aldi", "Growshop",
