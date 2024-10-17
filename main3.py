@@ -10,6 +10,9 @@ from PIL import Image, ImageTk
 from text_label import text_label, month_dict
 import numpy as np
 from lists import category_list, shop_list
+from income_window import open_income_window
+from cat_window import open_cat_window
+from fixed_cost_window import open_fixed_window
 
 FONT = ("open sans", 15)
 BOLD_FONT = ("open sans", 18, "bold")
@@ -58,22 +61,22 @@ cat_dict = {}
 dataframe = pandas.read_csv("planista_database.csv")
 dataframe["date"] = pandas.to_datetime(dataframe["date"], format="%d.%m.%Y")
 
-try:
-    fixed_df = pandas.read_csv("fixed_cost.csv")
-    sum_fixed_costs = sum(fixed_df['price'])
-
-    if current_day == 1:
-        new_data = pandas.DataFrame({"item": ["fixkosten"],
-                                     "shop": ["-"],
-                                     "category": ["fixkosten"],
-                                     "price": [sum_fixed_costs],
-                                     "date": [current_date],
-                                     })
-
-        new_data.to_csv("planista_database.csv", mode="a", index=False, header=False)
-
-except FileNotFoundError:
-    pass
+# try:
+#     fixed_df = pandas.read_csv("fixed_cost.csv")
+#     sum_fixed_costs = sum(fixed_df['price'])
+#
+#     if current_day == 1:
+#         new_data = pandas.DataFrame({"item": ["fixkosten"],
+#                                      "shop": ["-"],
+#                                      "category": ["fixkosten"],
+#                                      "price": [sum_fixed_costs],
+#                                      "date": [current_date],
+#                                      })
+#
+#         new_data.to_csv("planista_database.csv", mode="a", index=False, header=False)
+#
+# except FileNotFoundError:
+#     pass
 
 current_month_df = dataframe[dataframe["date"].dt.month == current_month]
 
@@ -206,6 +209,7 @@ def hall_of_shame_plt(root, row, column, figsize, chosen_month, chosen_year):
         fastfood = hos_sums.get('fast food', 0)
         gambling = hos_sums.get('gluecksspiel', 0)
         tobacco = hos_sums.get('tabakwaren', 0)
+        sweets = hos_sums.get('sweets', 0)
 
         if alc:
             tupel_list.append(("Alkohol", alc))
@@ -215,8 +219,10 @@ def hall_of_shame_plt(root, row, column, figsize, chosen_month, chosen_year):
             tupel_list.append(("Gluecksspiel", gambling))
         if tobacco:
             tupel_list.append(("Tabakwaren", tobacco))
+        if sweets:
+            tupel_list.append(("Sweets", sweets))
 
-        bad_sum = alc + fastfood + gambling + tobacco
+        bad_sum = alc + fastfood + gambling + tobacco + sweets
 
         tupel_list.sort(key=lambda x: x[1])
 
@@ -228,7 +234,7 @@ def hall_of_shame_plt(root, row, column, figsize, chosen_month, chosen_year):
 
     def hos_bar_chart_window():
 
-        categories = ["alkohol", "fast food", "gluecksspiel", "tabakwaren"]
+        categories = ["alkohol", "fast food", "gluecksspiel", "tabakwaren", "sweets"]
 
         current_month_values = []
         last_month_values = []
@@ -262,7 +268,7 @@ def hall_of_shame_plt(root, row, column, figsize, chosen_month, chosen_year):
         ax2.set_ylabel('')
         ax2.set_title('Comparison Current and Previous Month')
         ax2.set_xticks(x)
-        ax2.set_xticklabels(["Alkohol", "Fast Food", "gluecksspiel", "Tabakwaren"])
+        ax2.set_xticklabels(["Alkohol", "Fast Food", "gluecksspiel", "Tabakwaren", "sweets"])
         ax2.legend()
 
         ax2.set_aspect('auto')
@@ -331,203 +337,6 @@ def hall_of_shame_plt(root, row, column, figsize, chosen_month, chosen_year):
     canvas_widget = canvas.get_tk_widget()
     canvas_widget.bind("<Button-1>", lambda event: hos_bar_chart_window())
     canvas_widget.grid(row=row, column=column)
-
-
-def open_fixed_window():
-
-    def edit_fixed():
-
-        try:
-            fixed_dataframe = pandas.read_csv("fixed_cost.csv")
-            add_more_button.destroy()
-
-            curr_row = 3
-            for widget in entry_list:
-                widget[0].destroy()
-                widget[1].destroy()
-
-            for index, row in fixed_dataframe.iterrows():
-                new_cat_entry = tk.Entry(master=fixed_window, font=FONT)
-                new_cat_entry.grid(row=curr_row, column=0)
-                new_cat_entry.insert(0, row.category)
-
-                new_price_entry = tk.Entry(master=fixed_window, font=FONT, width=8)
-                new_price_entry.grid(row=curr_row, column=1)
-                new_price_entry.insert(0, row.price)
-
-                curr_row += 1
-
-        except FileNotFoundError:
-            messagebox.showerror("File not found", "You haven't added fixed costs yet")
-            pass
-
-    def add_more_entries():
-        curr_row = len(entry_list) + 4
-
-        new_cat_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
-        new_cat_entry.grid(row=curr_row, column=0, padx=20)
-
-        new_price_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR, width=8)
-        new_price_entry.grid(row=curr_row, column=1, sticky="w")
-        entry_list.append((new_cat_entry, new_price_entry))
-
-        add_more_button.grid(row=curr_row + 4, column=0, padx=20, pady=10)
-
-    def save_fixed_data():
-        correct_data = True
-
-        new_data_fixed = {"category": [],
-                          "price": [],
-                          }
-
-        for entries in entry_list:
-            cat_value = entries[0].get()
-            price_value = entries[1].get().replace(",", ".")
-
-            if cat_value and price_value:
-                new_data_fixed['category'].append(cat_value)
-                new_data_fixed['price'].append(price_value)
-
-            elif cat_value or price_value:
-                correct_data = False
-                messagebox.showerror("Something went wrong", "Both category and price have to be filled out")
-                break
-
-        if correct_data:
-            new_df = pandas.DataFrame(new_data_fixed)
-            new_df.to_csv("fixed_cost.csv", index=False)
-            messagebox.showinfo("Success", "Data added")
-            fixed_window.destroy()
-
-    fixed_window = tk.Toplevel(main_window)
-    fixed_window.minsize(400, 500)
-    fixed_window.title("Add your fixed costs")
-    fixed_window.config(bg="white")
-
-    top_label = tk.Label(fixed_window,
-                         text="Add your fixed costs below:",
-                         fg=DARK_ORANGE_COLOR,
-                         bg="white",
-                         font=BOLD_FONT,
-                         )
-    top_label.grid(row=0, column=0, padx=20, columnspan=3)
-
-    rent_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
-    rent_entry.grid(row=3, column=0, padx=10)
-    rent_entry.insert(0, "Rent")
-
-    rent_price_entry = tk.Entry(fixed_window, font=FONT, width=8, bg=PAPER_COLOR)
-    rent_price_entry.grid(row=3, column=1, sticky="w")
-
-    elec_entry = tk.Entry(fixed_window, font=FONT, bg=PAPER_COLOR)
-    elec_entry.grid(row=4, column=0)
-    elec_entry.insert(0, "Electricity")
-
-    elec_price_entry = tk.Entry(fixed_window, font=FONT, width=8, bg=PAPER_COLOR)
-    elec_price_entry.grid(row=4, column=1, sticky="w")
-
-    telephone_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
-    telephone_entry.grid(row=5, column=0, padx=20)
-    telephone_entry.insert(0, "Telephone / Internet")
-
-    tel_price_entry = tk.Entry(fixed_window, font=FONT, width=8, bg=PAPER_COLOR)
-    tel_price_entry.grid(row=5, column=1, sticky="w")
-
-    transport_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
-    transport_entry.grid(row=6, column=0, padx=20)
-    transport_entry.insert(0, "Public Transport")
-
-    trans_price_entry = tk.Entry(fixed_window, font=FONT, width=8, bg=PAPER_COLOR)
-    trans_price_entry.grid(row=6, column=1, sticky="w")
-
-    insurance_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
-    insurance_entry.grid(row=7, column=0, padx=20)
-    insurance_entry.insert(0, "Insurance")
-
-    ins_price_entry = tk.Entry(fixed_window, font=FONT, width=8, bg=PAPER_COLOR)
-    ins_price_entry.grid(row=7, column=1, sticky="w")
-
-    streaming_entry = tk.Entry(master=fixed_window, font=FONT, bg=PAPER_COLOR)
-    streaming_entry.grid(row=8, column=0, padx=20)
-    streaming_entry.insert(0, "Streaming")
-
-    stream_price_entry = tk.Entry(fixed_window, font=FONT, width=8, bg=PAPER_COLOR)
-    stream_price_entry.grid(row=8, column=1, sticky="w")
-
-    entry_list = [(rent_entry, rent_price_entry), (elec_entry, elec_price_entry), (telephone_entry, tel_price_entry),
-                  (insurance_entry, ins_price_entry), (transport_entry, trans_price_entry),
-                  (streaming_entry, stream_price_entry)]
-
-    save_button_2 = tk.Button(master=fixed_window, text="SAVE", font=FONT, bg=GREEN_COLOR, command=save_fixed_data)
-    save_button_2.grid(row=1, column=0, padx=20, pady=20, sticky="w")
-
-    edit_fixed_button = tk.Button(master=fixed_window, text="Edit", font=FONT, bg=ORANGE_COLOR, command=edit_fixed)
-    edit_fixed_button.grid(row=1, column=1, padx=20, pady=20, sticky="w")
-
-    empty_row = tk.Label(fixed_window, text="", font=FONT, bg="white")
-    empty_row.grid(row=9, column=0)
-
-    add_more_button = tk.Button(master=fixed_window, text="+ add more", command=add_more_entries, font=FONT)
-    add_more_button.grid(row=10, column=0)
-
-
-def open_cat_window(df, chosen_cat):
-    local_cat_sum = sum(df['price'])
-
-    catwin_font = ("open sans", 14)
-
-    if len(df["price"]) > 28:
-        catwin_font = ("open sans", 10)
-
-    cat_window = tk.Toplevel(main_window)
-    cat_window.minsize(400, 800)
-    cat_window.title(f" Category {chosen_cat.title()}")
-    cat_window.config(bg="white")
-
-    cat_frame = tk.Frame(cat_window, bg="white")
-    cat_frame.grid(row=0, column=0)
-
-    top_label = tk.Label(cat_frame,
-                         text=f"All purchases for {chosen_cat.title()}",
-                         bg="white",
-                         font=BOLD_FONT,
-                         fg=DARK_ORANGE_COLOR)
-
-    top_label.grid(row=1, column=0, padx=20, sticky="w")
-
-    sum_label = tk.Label(cat_frame,
-                         text=f"Total sum: {local_cat_sum:.2f} EUR",
-                         font=FONT,
-                         bg="white",
-                         fg=DARK_BLUE_COLOR)
-
-    sum_label.grid(row=2, column=0, padx=20, pady=10, sticky="w")
-
-    empty_row = tk.Label(cat_frame, text="", bg="white")
-    empty_row.grid(row=3, column=0)
-
-    label_row = 4
-
-    for index, row in df.iterrows():
-        raw_date = row['date'].date()
-        cat_date = raw_date.strftime("%d.%m.%Y")
-        raw_price = str(row['price']).replace(".", ",")
-        if len(raw_price.split(",")[1]) == 1:
-            raw_price = f"{raw_price}0"
-
-        item_label = tk.Label(cat_frame, text=row['item'].title(), font=catwin_font, bg="white")
-        item_label.grid(row=label_row, column=0, padx=20, sticky="w")
-
-        price_label = tk.Label(cat_frame, text=f"{raw_price} EUR", font=catwin_font, bg="white")
-        price_label.grid(row=label_row, column=1, padx=20, sticky="e")
-
-        shop_label = tk.Label(cat_frame, text=row['shop'].upper(), font=catwin_font, bg="white")
-        shop_label.grid(row=label_row, column=2, padx=20, sticky="w")
-
-        date_label = tk.Label(cat_frame, text=cat_date, font=catwin_font, bg="white")
-        date_label.grid(row=label_row, column=3, padx=20, sticky="w")
-
-        label_row += 1
 
 
 def open_stats_window():
@@ -681,6 +490,35 @@ def open_stats_window():
         entries_year_cat = search_df[(search_df["date"].dt.year == chosen_year) &
                                      (search_df["category"] == chosen_cat.lower())]
 
+        def calc_total_earnings():
+            fixed_sum = 0
+            try:
+                try:
+                    fixed_dataframe = pandas.read_csv("fixed_cost.csv")
+                    fixed_sum = sum(fixed_dataframe['price'])
+                    if entries_month.empty:
+                        fixed_sum = 0
+                except FileNotFoundError:
+                    pass
+
+                income_dataframe = pandas.read_csv("income_database.csv")
+                income_dataframe['date'] = pandas.to_datetime(income_dataframe['date'], format="%d.%m.%Y")
+
+                monthly_income = income_dataframe[income_dataframe['date'].dt.month == chosen_month]
+                income_sum = sum(monthly_income['amount'])
+
+                monthly_cost = search_df[search_df['date'].dt.month == chosen_month]
+                cost_sum = sum(monthly_cost['price'])
+
+                if fixed_sum != 0:
+                    earnings = income_sum - cost_sum - fixed_sum
+                    return earnings
+                else:
+                    return 0
+
+            except FileNotFoundError:
+                return
+
         for c in category_list:
             cat_df1 = search_df[search_df["category"] == c.lower()]
             cat_sum1 = cat_df1["price"].sum()
@@ -714,13 +552,27 @@ def open_stats_window():
 
             # wenn Monat gewaehlt wurde
             elif chosen_month > 0 and chosen_year != 0:
+                total_earnings = calc_total_earnings()
+
+                if not total_earnings:
+                    total_earnings = f""
+
+                elif total_earnings > 0:
+                    total_earnings = round(total_earnings, 2)
+                    total_earnings = f"+{total_earnings} EUR"
+
+                elif total_earnings < 0:
+                    total_earnings = round(total_earnings, 2)
+                    total_earnings = f"-{total_earnings} EUR"
+
                 sum_month_before_chosen_month_df = search_df[search_df["date"].dt.month == (chosen_month - 2) % 12 + 1]
                 sum_month_before_chosen_month = sum(sum_month_before_chosen_month_df["price"])
                 perc_dev_month = percentage_deviation(total_sum_per_month, sum_month_before_chosen_month)
 
                 total_purchases.config(text=f"Total purchases: {len(entries_month)}\n"
                                             f"Total cost: {round(total_sum_per_month, 2):.2f} EUR\n"
-                                            f"Difference last month: {perc_dev_month} %")
+                                            f"Difference last month: {perc_dev_month} %\n"
+                                            f"{total_earnings}")
 
                 text_label(gui_frame_2, label_to_remove, 0, chosen_month, chosen_year)
 
@@ -728,7 +580,7 @@ def open_stats_window():
                           shop_sums.values, shop_sums.index)
 
                 hall_of_shame_plt(stats_window, 9, 0, (4, 3), chosen_month, chosen_year)
-                open_cat_window(entries_month, "All Categories")
+                open_cat_window(main_window, entries_month, "All Categories")
 
                 small_plt(gui_frame_2, f"Categories for {month_dict[chosen_month]} {chosen_year}", 8, 2,
                           cat_sums.values, cat_sums.index)
@@ -780,7 +632,7 @@ def open_stats_window():
 
             # wenn Kategorie und Monat gewaehlt wurden
             elif chosen_month > 0:
-                open_cat_window(entries_month_cat, chosen_cat)
+                open_cat_window(main_window, entries_month_cat, chosen_cat)
                 cat_sums = entries_month_cat.groupby("category")["price"].sum()
                 cat_df_last_month = last_month_df[last_month_df['category'] == chosen_cat]
                 cat_sum_lm = sum(cat_df_last_month['price'])
@@ -794,7 +646,7 @@ def open_stats_window():
 
             # wenn Kategorie aber kein Monat gewaehlt wurde
             else:
-                open_cat_window(entries_year_cat, chosen_cat)
+                open_cat_window(main_window, entries_year_cat, chosen_cat)
                 cat_sums = cat_df_year.groupby("category")["price"].sum()
                 total_purchases.config(text=f"Total purchases: {len(cat_df_year)}\n"
                                             f"Total cost: {sum(cat_sums):.2f} EUR",
@@ -947,10 +799,10 @@ else:
                                )
     last_entry_text.grid(row=4, column=2, columnspan=3)
 
-item_entry = tk.Entry(master=gui_frame, justify="right", font=FONT, bg=PAPER_COLOR)
+item_entry = tk.Entry(master=gui_frame, justify="right", font=("open sans", 18), bg=PAPER_COLOR)
 item_entry.grid(row=2, column=1, padx=10)
 
-cost_entry = tk.Entry(master=gui_frame, justify="right", font=("courier", 20), bg=PAPER_COLOR, width=8)
+cost_entry = tk.Entry(master=gui_frame, justify="right", font=("courier", 18), bg=PAPER_COLOR, width=8)
 cost_entry.grid(row=2, column=2)
 
 date_entry = tk.Entry(master=gui_frame, font=("courier", 15), justify="right", bg=PAPER_COLOR, width=14)
@@ -979,9 +831,17 @@ fixed_button = tk.Button(master=gui_frame,
                          text="Add fixed costs",
                          bg=RED_COLOR,
                          font=FONT,
-                         command=open_fixed_window,
+                         command=lambda: open_fixed_window(main_window),
                          )
 fixed_button.grid(row=3, column=4, pady=50, columnspan=2)
+
+add_income_button = tk.Button(master=gui_frame,
+                              text="Add Income",
+                              font=FONT,
+                              bg=YELLOW_COLOR,
+                              command=lambda: open_income_window(main_window),
+                              )
+add_income_button.grid(row=3, column=1, sticky="e")
 
 drop_down_cat = tk.OptionMenu(gui_frame, selected_category, *category_list)
 drop_down_cat.config(bg=ORANGE_COLOR, font=FONT, width=6)
