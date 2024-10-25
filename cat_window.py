@@ -1,4 +1,5 @@
 import tkinter as tk
+from line_plot_window import open_line_plot_window
 
 FONT = ("open sans", 15)
 BOLD_FONT = ("open sans", 18, "bold")
@@ -64,3 +65,4 @@ def open_cat_window(root, df, chosen_cat):
         date_label.grid(row=label_row, column=3, padx=20, sticky="w")
 
         label_row += 1
+

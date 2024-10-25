@@ -161,7 +161,9 @@ def open_statistics(main_window, lm_df, cat_dict, label_to_remove, bs_list, bs_v
         search_df = pandas.read_csv("planista_database.csv")
         try:
             fc_df = pandas.read_csv("fixed_cost.csv")
-            fixcosts = fc_df.price.iloc[0]
+            fixcosts = 0
+            for index, row in fc_df.iterrows():
+                fixcosts += row.price
 
         except FileNotFoundError:
             fixcosts = 0
@@ -307,17 +309,13 @@ def open_statistics(main_window, lm_df, cat_dict, label_to_remove, bs_list, bs_v
 
         # wenn Kategorie gewaehlt wurde
         else:
-            print(f"Kategorie gewählt: {chosen_cat}")
             cat_df2 = search_df[search_df["category"] == chosen_cat]
             cat_df_month = cat_df2[(cat_df2["date"].dt.month == chosen_month) &
                                    (cat_df2["date"].dt.year == chosen_year)]
             cat_df_year = cat_df2[cat_df2["date"].dt.year == chosen_year]
 
-            open_line_plot_window(main_window, category=chosen_cat)
-
             # when only Cat was chosen
             if chosen_month == 0 and not chosen_year:
-                print(f"Kein Monat: {chosen_month} und kein Jahr: {chosen_year}")
                 cat_df3 = overall_stats_df[overall_stats_df['category'] == chosen_cat]
                 only_cat_sums = round(sum(cat_df3['price']), 2)
 
@@ -326,10 +324,10 @@ def open_statistics(main_window, lm_df, cat_dict, label_to_remove, bs_list, bs_v
                                        font=BOLD_FONT)
 
                 text_label(gui_frame_2, label_to_remove, chosen_cat.title(), 0, chosen_year)
+                open_line_plot_window(main_window, category=chosen_cat)
 
             # wenn Kategorie aber kein Monat gewaehlt wurde
             elif chosen_month > 0 and chosen_year:
-                print(f"Monat gewählt: {chosen_month} und Jahr gewählt: {chosen_year}")
                 cat_sums = entries_month_cat.groupby("category")["price"].sum()
                 cat_df_last_month = lm_df[lm_df['category'] == chosen_cat]
                 cat_sum_lm = sum(cat_df_last_month['price'])
@@ -346,7 +344,6 @@ def open_statistics(main_window, lm_df, cat_dict, label_to_remove, bs_list, bs_v
 
             # when Cat and Year were chosen
             elif chosen_month == 0 and chosen_year:
-
                 cat_sums = sum(cat_df2['price'])
 
                 total_purchases.config(text=f"Total purchases: {len(cat_df2['price'])}\n"
@@ -357,7 +354,6 @@ def open_statistics(main_window, lm_df, cat_dict, label_to_remove, bs_list, bs_v
 
             # wenn Kategorie und Monat gewaehlt wurden
             elif chosen_month > 0:
-                print(f"Kategorie und Monat gewählt {chosen_month}")
                 open_cat_window(gui_frame_2, entries_month_cat, chosen_cat)
                 cat_sums = entries_month_cat.groupby("category")["price"].sum()
                 cat_df_last_month = lm_df[lm_df['category'] == chosen_cat]
@@ -370,7 +366,7 @@ def open_statistics(main_window, lm_df, cat_dict, label_to_remove, bs_list, bs_v
 
                 text_label(gui_frame_2, label_to_remove, chosen_cat.title(), chosen_month, current_year)
 
-                # open_line_plot_window(main_window, category=chosen_cat)
+                open_line_plot_window(main_window, category=chosen_cat)
 
             else:
                 print("else")
@@ -381,6 +377,7 @@ def open_statistics(main_window, lm_df, cat_dict, label_to_remove, bs_list, bs_v
                                        font=BOLD_FONT)
 
                 text_label(gui_frame_2, label_to_remove, chosen_cat.title(), 0, current_year)
+                open_line_plot_window(main_window, category=chosen_cat)
 
     current_month_earnings = round(calc_total_earnings(current_month), 2)
     if current_month_earnings > 0:
