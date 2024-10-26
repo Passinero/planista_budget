@@ -215,7 +215,7 @@ def open_statistics(main_window, lm_df, cat_dict, label_to_remove, bs_list, bs_v
         entries_month_cat = search_df[(search_df["date"].dt.month == chosen_month) &
                                       (search_df["date"].dt.year == chosen_year) &
                                       (search_df["category"] == chosen_cat.lower())]
-        print(entries_month_cat)
+
         entries_year = search_df[search_df["date"].dt.year == chosen_year]
 
         entries_year_cat = search_df[(search_df["date"].dt.year == chosen_year) &
@@ -369,7 +369,6 @@ def open_statistics(main_window, lm_df, cat_dict, label_to_remove, bs_list, bs_v
                 open_line_plot_window(main_window, category=chosen_cat)
 
             else:
-                print("else")
                 open_cat_window(gui_frame_2, entries_year_cat, chosen_cat)
                 cat_sums = cat_df_year.groupby("category")["price"].sum()
                 total_purchases.config(text=f"Total purchases: {len(cat_df_year)}\n"
