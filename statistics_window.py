@@ -13,6 +13,7 @@ from cat_window import open_cat_window
 from pie_chart_window import pie_chart_window
 from hall_of_shame import hall_of_shame_plt
 from line_plot_window import open_line_plot_window
+from calc_earnings import calc_total_earnings
 
 FONT = ("open sans", 15)
 BOLD_FONT = ("open sans", 18, "bold")
@@ -157,33 +158,34 @@ def open_statistics(main_window, lm_df, cat_dict, label_to_remove, bs_list, bs_v
 
         return perc_devi
 
-    def calc_total_earnings(month):
-        search_df = pandas.read_csv("planista_database.csv")
-        try:
-            fc_df = pandas.read_csv("fixed_cost.csv")
-            fixcosts = 0
-            for index, row in fc_df.iterrows():
-                fixcosts += row.price
-
-        except FileNotFoundError:
-            fixcosts = 0
-
-        try:
-            income_dataframe = pandas.read_csv("income_database.csv")
-            income_dataframe['date'] = pandas.to_datetime(income_dataframe['date'], format="%d.%m.%Y")
-            search_df['date'] = pandas.to_datetime(search_df['date'], format="%d.%m.%Y")
-
-            monthly_income = income_dataframe[income_dataframe['date'].dt.month == month]
-            income_sum = sum(monthly_income['amount'])
-            monthly_cost = search_df[search_df['date'].dt.month == month]
-            cost_sum = sum(monthly_cost['price'])
-
-            earnings = income_sum - cost_sum - fixcosts
-
-            return earnings
-
-        except FileNotFoundError:
-            return
+    # def calc_total_earnings(month):
+    #     search_df = pandas.read_csv("planista_database.csv")
+    #     try:
+    #         fc_df = pandas.read_csv("fixed_cost.csv")
+    #         fixcosts = 0
+    #         for index, row in fc_df.iterrows():
+    #             fixcosts += row.price
+    #
+    #     except FileNotFoundError:
+    #         fixcosts = 0
+    #
+    #     try:
+    #         income_dataframe = pandas.read_csv("income_database.csv")
+    #         income_dataframe['date'] = pandas.to_datetime(income_dataframe['date'], format="%d.%m.%Y")
+    #         search_df['date'] = pandas.to_datetime(search_df['date'], format="%d.%m.%Y")
+    #
+    #         monthly_income = income_dataframe[income_dataframe['date'].dt.month == month]
+    #         income_sum = sum(monthly_income['amount'])
+    #
+    #         monthly_cost = search_df[search_df['date'].dt.month == month]
+    #         cost_sum = sum(monthly_cost['price'])
+    #
+    #         earnings = income_sum - cost_sum - fixcosts
+    #
+    #         return earnings
+    #
+    #     except FileNotFoundError:
+    #         return
 
     # small PLTs zum jeweiligen monat ändern, auch wenn eine kategorie gewählt wurde
     def search_stats():
@@ -279,6 +281,8 @@ def open_statistics(main_window, lm_df, cat_dict, label_to_remove, bs_list, bs_v
 
                 small_plt(gui_frame_2, f"Categories for {month_dict[chosen_month]} {chosen_year}", 8, 2,
                           cat_sums.values, cat_sums.index)
+
+                open_line_plot_window(main_window, month=chosen_month)
 
             # wenn kein Jahr gewählt wurde
             elif chosen_year == 0 or chosen_month == 0 and chosen_year == 0:
