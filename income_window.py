@@ -114,45 +114,79 @@ def open_income_window(root):
                                      command=save_new_data,
                                      bg="#D9EDBF"
                                      )
-            save_button2.grid(row=row + 2, column=1, pady=20)
+            save_button2.grid(row=row + 1, column=1, pady=20)
 
         except FileNotFoundError:
             messagebox.showerror("Error", "No data found")
             return
 
-    def save_income_data():
-        correct_data = False
-        title = title_entry.get()
-        amount = amount_entry.get()
-        if "," in amount:
-            amount = amount.replace(",", ".")
-        inc_date = inc_date_entry.get()
+    def save_income_data(status):
 
-        title_entry.delete(0, tk.END)
-        amount_entry.delete(0, tk.END)
+        if status == "new":
+            correct_data = False
+            title = title_entry.get()
+            amount = amount_entry.get()
+            if "," in amount:
+                amount = amount.replace(",", ".")
+            inc_date = inc_date_entry.get()
 
-        if title and amount and inc_date:
-            new_income_data["title"].append(title)
-            new_income_data["amount"].append(amount)
-            new_income_data["date"].append(inc_date)
+            title_entry.delete(0, tk.END)
+            amount_entry.delete(0, tk.END)
 
+            if title and amount and inc_date:
+                new_income_data["title"].append(title)
+                new_income_data["amount"].append(amount)
+                new_income_data["date"].append(inc_date)
+
+                correct_data = True
+
+            elif title or amount or inc_date:
+                messagebox.showerror("Data missing", "Please insert title, amount and date")
+                return
+
+            try:
+                new_income_df = pandas.DataFrame(new_income_data)
+                if correct_data:
+                    new_income_df.to_csv("income_database.csv", mode="a", index=False, header=False)
+                    messagebox.showinfo("Success", "Data saved successfully")
+                    income_win.destroy()
+                    open_income_window(root)
+
+            except FileNotFoundError:
+                income_df_2 = pandas.DataFrame(new_income_data)
+                income_df_2.to_csv("income_database.csv", mode="a", index=False, header=False)
+        else:
             correct_data = True
+            new_data = {"title": [],
+                        "amount": [],
+                        "date": []
+                        }
 
-        elif title or amount or inc_date:
-            messagebox.showerror("Data missing", "Please insert title, amount and date")
-            return
+            for entries in entry_list:
+                title_value = entries[0].get()
+                amount_value = entries[1].get()
+                date_value = entries[2].get()
 
-        try:
-            new_income_df = pandas.DataFrame(new_income_data)
+                if title_value and amount_value and date_value:
+                    new_data['title'].append(title_value)
+                    new_data['amount'].append(amount_value)
+                    new_data['date'].append(date_value)
+
+                else:
+                    correct_data = False
+                    messagebox.showerror("Something went wrong", "Both category and price have to be filled out")
+                    break
+
             if correct_data:
-                new_income_df.to_csv("income_database.csv", mode="a", index=False, header=False)
-                messagebox.showinfo("Success", "Data saved successfully")
-                income_win.destroy()
-                open_income_window(root)
+                new_df = pandas.DataFrame(new_data)
+                new_df.to_csv("income_database.csv", index=False)
+                messagebox.showinfo("Success", "Data saved")
 
-        except FileNotFoundError:
-            income_df_2 = pandas.DataFrame(new_income_data)
-            income_df_2.to_csv("income_database.csv", mode="a", index=False, header=False)
+                for widget in widget_list:
+                    widget.destroy()
+
+                label_widget_output("label")
+
 
     income_win = tk.Toplevel(root)
     income_win.minsize(500, 700)
@@ -198,7 +232,7 @@ def open_income_window(root):
                             text="Save",
                             font=FONT,
                             bg="#d0eef8",
-                            command=save_income_data
+                            command=lambda: save_income_data("new")
                             )
     save_button.grid(row=4, column=0, pady=40)
 
