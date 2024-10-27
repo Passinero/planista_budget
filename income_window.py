@@ -224,7 +224,7 @@ def open_income_window(root):
     amount_entry = tk.Entry(master=income_win, font=FONT)
     amount_entry.grid(row=2, column=1, padx=10)
 
-    inc_date_entry = tk.Entry(master=income_win, font=FONT)
+    inc_date_entry = tk.Entry(master=income_win, font=FONT, justify="right")
     inc_date_entry.grid(row=2, column=2, padx=10)
     inc_date_entry.insert(tk.END, CURRENT_DATE)
 

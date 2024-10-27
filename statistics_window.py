@@ -14,6 +14,7 @@ from pie_chart_window import pie_chart_window
 from hall_of_shame import hall_of_shame_plt
 from line_plot_window import open_line_plot_window
 from calc_earnings import calc_total_earnings
+from get_income_sums import get_income_sums
 
 FONT = ("open sans", 15)
 BOLD_FONT = ("open sans", 18, "bold")
@@ -54,6 +55,9 @@ def open_statistics(main_window, lm_df, cat_dict, label_to_remove, bs_list, bs_v
     overall_curr_month_df = overall_stats_df[overall_stats_df["date"].dt.month == current_month]
     sum_current_month = sum(overall_curr_month_df["price"])
     sum_last_month = sum(lm_df["price"])
+
+    income_tupel = get_income_sums(month=current_month, year=current_year)
+    yearly_income_sum = income_tupel[1]
 
     def extract_shop_category(values_list, labels_list):
         sorted_labels = []
@@ -134,7 +138,9 @@ def open_statistics(main_window, lm_df, cat_dict, label_to_remove, bs_list, bs_v
         shop_sums = entries_year.groupby("shop")["price"].sum()
         cat_sums = entries_year.groupby("category")["price"].sum()
         total_purchases.config(text=f"Total purchases: {len(entries_year)}\n"
-                                    f"Total cost: {round(total_sum_per_year, 2):.2f} EUR")
+                                    f"Total cost: {round(total_sum_per_year, 2):.2f} EUR\n"
+                                    f"Total income: {yearly_income_sum} EUR"
+                               )
 
         text_label(gui_frame_2, label_to_remove, 0, 0, current_year)
 
@@ -157,35 +163,6 @@ def open_statistics(main_window, lm_df, cat_dict, label_to_remove, bs_list, bs_v
             perc_devi = "100"
 
         return perc_devi
-
-    # def calc_total_earnings(month):
-    #     search_df = pandas.read_csv("planista_database.csv")
-    #     try:
-    #         fc_df = pandas.read_csv("fixed_cost.csv")
-    #         fixcosts = 0
-    #         for index, row in fc_df.iterrows():
-    #             fixcosts += row.price
-    #
-    #     except FileNotFoundError:
-    #         fixcosts = 0
-    #
-    #     try:
-    #         income_dataframe = pandas.read_csv("income_database.csv")
-    #         income_dataframe['date'] = pandas.to_datetime(income_dataframe['date'], format="%d.%m.%Y")
-    #         search_df['date'] = pandas.to_datetime(search_df['date'], format="%d.%m.%Y")
-    #
-    #         monthly_income = income_dataframe[income_dataframe['date'].dt.month == month]
-    #         income_sum = sum(monthly_income['amount'])
-    #
-    #         monthly_cost = search_df[search_df['date'].dt.month == month]
-    #         cost_sum = sum(monthly_cost['price'])
-    #
-    #         earnings = income_sum - cost_sum - fixcosts
-    #
-    #         return earnings
-    #
-    #     except FileNotFoundError:
-    #         return
 
     # small PLTs zum jeweiligen monat ändern, auch wenn eine kategorie gewählt wurde
     def search_stats():
@@ -223,6 +200,8 @@ def open_statistics(main_window, lm_df, cat_dict, label_to_remove, bs_list, bs_v
         entries_year_cat = search_df[(search_df["date"].dt.year == chosen_year) &
                                      (search_df["category"] == chosen_cat.lower())]
 
+        inner_income_tupel = get_income_sums(month=chosen_month, year=chosen_year)
+
         for c in category_list:
             cat_df1 = search_df[search_df["category"] == c.lower()]
             cat_sum1 = cat_df1["price"].sum()
@@ -244,7 +223,9 @@ def open_statistics(main_window, lm_df, cat_dict, label_to_remove, bs_list, bs_v
                 overall_catsums = search_df.groupby("category")["price"].sum()
 
                 total_purchases.config(text=f"Total purchases: {len(overall_stats_df['price'])}\n"
-                                            f"Total cost: {round(sum(overall_stats_df['price']), 2):.2f} EUR")
+                                            f"Total cost: {round(sum(overall_stats_df['price']), 2):.2f} EUR\n"
+                                            f"Total income: {inner_income_tupel[2]} EUR"
+                                       )
 
                 text_label(gui_frame_2, label_to_remove, 0, 0, 0)
 
@@ -268,7 +249,9 @@ def open_statistics(main_window, lm_df, cat_dict, label_to_remove, bs_list, bs_v
                 total_purchases.config(text=f"Total purchases: {len(entries_month)}\n"
                                             f"Total cost: {round(total_sum_per_month, 2):.2f} EUR\n"
                                             f"Difference last month: {perc_dev_month} %\n"
-                                            f"{total_earnings} EUR")
+                                            f"Income: {inner_income_tupel[0]} EUR\n"
+                                            f"{total_earnings} EUR"
+                                       )
 
                 text_label(gui_frame_2, label_to_remove, 0, chosen_month, chosen_year)
 
@@ -287,7 +270,9 @@ def open_statistics(main_window, lm_df, cat_dict, label_to_remove, bs_list, bs_v
             # wenn kein Jahr gewählt wurde
             elif chosen_year == 0 or chosen_month == 0 and chosen_year == 0:
                 total_purchases.config(text=f"Total purchases: {len(search_df['category'])}\n"
-                                            f"Total cost: {round(sum(search_df['price']), 2):.2f} EUR")
+                                            f"Total cost: {round(sum(search_df['price']), 2):.2f} EUR\n"
+                                            f"Total income: {inner_income_tupel[2]} EUR"
+                                       )
 
                 text_label(gui_frame_2, label_to_remove, 0, 0, 0)
 
@@ -300,7 +285,9 @@ def open_statistics(main_window, lm_df, cat_dict, label_to_remove, bs_list, bs_v
                 shop_sums = entries_year.groupby("shop")["price"].sum()
                 cat_sums = entries_year.groupby("category")["price"].sum()
                 total_purchases.config(text=f"Total purchases: {len(entries_year)}\n"
-                                            f"Total cost: {round(total_sum_per_year, 2):.2f} EUR")
+                                            f"Total cost: {round(total_sum_per_year, 2):.2f} EUR\n"
+                                            f"Income: {inner_income_tupel[1]} EUR"
+                                       )
 
                 text_label(gui_frame_2, label_to_remove, 0, 0, chosen_year)
 
@@ -463,6 +450,7 @@ def open_statistics(main_window, lm_df, cat_dict, label_to_remove, bs_list, bs_v
                                text=f"Total purchases: {len(overall_curr_month_df)}\n"
                                     f"Total cost: {sum_current_month :.2f} EUR\n"
                                     f"Difference last month: {perc_dev} %\n"
+                                    f"Income: {income_tupel[0]} EUR\n"
                                     f"{current_month_earnings} EUR",
                                font=BOLD_FONT,
                                bg="white"
