@@ -1,0 +1,26 @@
+Penny
+Famila
+Aldi
+Growshop
+DM
+Rewe
+Edeka
+Amazon
+Kleinanzeigen
+Online Sonstiges
+Restaurant
+Tankstelle
+Kiosk
+Action
+Kik
+H&M
+Fast Food
+Werkstatt
+Paypal
+Sonstiges
+McDonald's
+Burger King
+Fixkosten
+Apotheke
+DEGIRO
+Post
