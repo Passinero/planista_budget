@@ -1,0 +1,26 @@
+Lebensmittel
+Haushalt
+Kleidung
+Elektronik
+Pflanzen
+Fast Food
+Fluff
+Tabakwaren
+Auto
+Alkohol
+Restaurant
+Gluecksspiel
+Tanken
+Geschenke
+Arbeit
+Daniela
+Post
+Bueroartikel
+Urlaub
+Sonstiges
+Fixkosten
+Friseur
+Sweets
+Wertanlage
+Kultur
+Unterhaltung
