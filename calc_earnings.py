@@ -1,12 +1,10 @@
-# -*- coding: utf-8 -*-
-
-import pandas as pd
+import pandas
 
 
 def calc_total_earnings(month):
-    search_df = pd.read_csv("planista_database.csv")
+    search_df = pandas.read_csv("planista_database.csv")
     try:
-        fc_df = pd.read_csv("fixed_cost.csv")
+        fc_df = pandas.read_csv("fixed_cost.csv")
         fixcosts = 0
         for index, row in fc_df.iterrows():
             fixcosts += row.price
@@ -15,9 +13,9 @@ def calc_total_earnings(month):
         fixcosts = 0
 
     try:
-        income_dataframe = pd.read_csv("income_database.csv")
-        income_dataframe['date'] = pd.to_datetime(income_dataframe['date'], format="%d.%m.%Y")
-        search_df['date'] = pd.to_datetime(search_df['date'], format="%d.%m.%Y")
+        income_dataframe = pandas.read_csv("income_database.csv")
+        income_dataframe['date'] = pandas.to_datetime(income_dataframe['date'], format="%d.%m.%Y")
+        search_df['date'] = pandas.to_datetime(search_df['date'], format="%d.%m.%Y")
 
         monthly_income = income_dataframe[income_dataframe['date'].dt.month == month]
         income_sum = sum(monthly_income['amount'])

@@ -30,7 +30,7 @@ def text_label(root, list_to_remove, cat, month, year):
         month = 0
         month_name = ""
 
-    # when nothing was chosen
+    # when nothing was chosen (bei Start von Statistics)
     if cat == 0 and month == 0 and year == 0:
         chosen_year_text = tk.Label(master=root,
                                     text=f"",
@@ -51,7 +51,7 @@ def text_label(root, list_to_remove, cat, month, year):
     # when category and month were chosen
     elif cat != 0 and month != 0:
         chosen_year_text = tk.Label(master=root,
-                                    text=f"Money spend on {cat}\nin {month_name} {year}",
+                                    text=f" {cat} in {month_name} {year}",
                                     font=font,
                                     bg="white"
                                     )
@@ -61,7 +61,7 @@ def text_label(root, list_to_remove, cat, month, year):
     # when category and year were chosen
     elif cat != 0 and year != 0:
         chosen_year_text = tk.Label(master=root,
-                                    text=f"Money spend on {cat.title()}\nin {year}",
+                                    text=f" {cat.title()} in {year}",
                                     font=font,
                                     bg="white"
                                     )
@@ -71,7 +71,7 @@ def text_label(root, list_to_remove, cat, month, year):
     # when category was chosen
     elif cat != 0:
         chosen_year_text = tk.Label(master=root,
-                                    text=f"Money spend on \n{cat.title()}",
+                                    text=f"Total {cat.title()}",
                                     font=font,
                                     bg="white"
                                     )

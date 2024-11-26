@@ -29,41 +29,28 @@ def open_fixed_window(root):
         new_price_entry_add.bind("<Button-1>", clear_entries)
         entry_list.append((new_cat_entry, new_price_entry_add))
 
-        add_more_button.grid(row=curr_row_add + 4, column=0, padx=20)
+        plus_one_button.grid(row=curr_row_add + 5, column=0, padx=20, pady=10)
+        save_button_2.grid(row=curr_row_add + 6, column=0, padx=20, pady=10)
 
-    def save_fixed_data(status):
+    def save_fixed_data():
         correct_data = True
 
         new_data_fixed = {"category": [],
                           "price": [],
                           }
 
-        if status == "new":
-            for entries in entry_list:
-                cat_value = entries[0].get()
-                price_value = entries[1].get().replace(",", ".")
+        for entries in entry_list:
+            cat_value = entries[0].get()
+            price_value = entries[1].get().replace(",", ".")
 
-                if cat_value and price_value:
-                    new_data_fixed['category'].append(cat_value)
-                    new_data_fixed['price'].append(price_value)
+            if cat_value and price_value:
+                new_data_fixed['category'].append(cat_value)
+                new_data_fixed['price'].append(price_value)
 
-                elif cat_value or price_value:
-                    correct_data = False
-                    messagebox.showerror("Something went wrong", "Both category and price have to be filled out")
-                    break
-        else:
-            for entries in edit_entry_list:
-                cat_value = entries[0].get()
-                price_value = entries[1].get().replace(",", ".")
-
-                if cat_value and price_value:
-                    new_data_fixed['category'].append(cat_value)
-                    new_data_fixed['price'].append(price_value)
-
-                elif cat_value or price_value:
-                    correct_data = False
-                    messagebox.showerror("Something went wrong", "Both category and price have to be filled out")
-                    break
+            elif cat_value or price_value:
+                correct_data = False
+                messagebox.showerror("Something went wrong", "Both category and price have to be filled out")
+                break
 
         if correct_data:
             new_df = pandas.DataFrame(new_data_fixed)
@@ -73,7 +60,6 @@ def open_fixed_window(root):
             open_fixed_window(root)
 
     entry_list = []
-    edit_entry_list = []
 
     fixed_window = tk.Toplevel(root)
     fixed_window.minsize(400, 500)
@@ -114,13 +100,7 @@ def open_fixed_window(root):
 
         entry_list.append((empty_entry, empty_price_entry))
 
-    save_button_2 = tk.Button(master=fixed_window,
-                              text="SAVE",
-                              font=FONT,
-                              bg=GREEN_COLOR,
-                              command=lambda: save_fixed_data("new")
-                              )
-    save_button_2.grid(row=1, column=0, padx=20, pady=10, sticky="w")
+    current_row = len(entry_list)
 
     name_label = tk.Label(master=fixed_window, text="Name", font=FONT, bg="white")
     name_label.grid(row=2, column=0, padx=15, pady=15, sticky="w")
@@ -128,8 +108,19 @@ def open_fixed_window(root):
     cost_label = tk.Label(master=fixed_window, text="Cost", font=FONT, bg="white")
     cost_label.grid(row=2, column=1, pady=15, sticky="w")
 
-    empty_row = tk.Label(fixed_window, text="", font=FONT, bg="white")
-    empty_row.grid(row=9, column=0)
+    plus_one_button = tk.Button(master=fixed_window,
+                                text="+",
+                                command=add_more_entries,
+                                font=("open sans", 13),
+                                width=24
+                                )
+    plus_one_button.grid(row=current_row + 3, column=0, padx=20, pady=10, sticky="w")
 
-    add_more_button = tk.Button(master=fixed_window, text="+ add more", command=add_more_entries, font=FONT)
-    add_more_button.grid(row=10, column=0)
+    save_button_2 = tk.Button(master=fixed_window,
+                              text="Save",
+                              font=("open sans", 13),
+                              bg=GREEN_COLOR,
+                              command=lambda: save_fixed_data(),
+                              width=24
+                              )
+    save_button_2.grid(row=current_row + 4, column=0, padx=20, pady=10, sticky="w")

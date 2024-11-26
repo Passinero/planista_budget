@@ -8,8 +8,7 @@ from datetime import date
 import numpy as np
 
 from text_label import month_dict
-# from color_list import (ORANGE_COLOR, DARK_ORANGE_COLOR, DARK_BLUE_COLOR,
-#                         BLUE_COLOR, GREEN_COLOR, RED_COLOR, PINK_COLOR, PURPLE_COLOR, YELLOW_COLOR, DARK_COLOR)
+
 
 FONT = ("open sans", 15)
 BOLD_FONT = ("open sans", 18, "bold")
@@ -39,36 +38,38 @@ current_year = date.today().year
 
 def hall_of_shame_plt(root, row, column, figsize, chosen_month, chosen_year, bs_list, bs_values, main_window):
 
-    def fill_bs_list(df):
-
+    def fill_bs_list(df, labels, values):
         tupel_list = []
+        current_hos_list = []
+
+        try:
+            with open("hos_database.txt", mode="r") as file:
+                lines = file.readlines()
+
+                for cat in lines:
+                    clean_cat = cat.split("/")[0].strip()
+                    current_hos_list.append(clean_cat)
+
+        except FileNotFoundError:
+            with open("hos_database.txt", mode="w") as file2:
+                file2.write("")
+                print("File hos_database.txt created")
 
         hos_sums = df.groupby('category')['price'].sum()
+        bad_sum = 0
 
-        alc = hos_sums.get('alkohol', 0)
-        fastfood = hos_sums.get('fast food', 0)
-        gambling = hos_sums.get('gluecksspiel', 0)
-        tobacco = hos_sums.get('tabakwaren', 0)
-        sweets = hos_sums.get('sweets', 0)
+        for cat in current_hos_list:
+            curr_cat_sum = hos_sums.get(cat, 0)
 
-        if alc:
-            tupel_list.append(("Alkohol", alc))
-        if fastfood:
-            tupel_list.append(("Fast Food", fastfood))
-        if gambling:
-            tupel_list.append(("Gluecksspiel", gambling))
-        if tobacco:
-            tupel_list.append(("Tabakwaren", tobacco))
-        if sweets:
-            tupel_list.append(("Sweets", sweets))
-
-        bad_sum = alc + fastfood + gambling + tobacco + sweets
+            bad_sum += curr_cat_sum
+            if curr_cat_sum > 0:
+                tupel_list.append((cat.title(), curr_cat_sum))
 
         tupel_list.sort(key=lambda x: x[1])
 
         for pair in tupel_list:
-            bs_list.append(pair[0])
-            bs_values.append(pair[1])
+            labels.append(pair[0])
+            values.append(pair[1])
 
         return bad_sum
 
@@ -140,17 +141,18 @@ def hall_of_shame_plt(root, row, column, figsize, chosen_month, chosen_year, bs_
     if chosen_month == 0 and chosen_year == 0:
         month_name = ""
         curr_year = "Overall"
-        hos_sum = fill_bs_list(hos_df)
+        hos_sum = fill_bs_list(hos_df, bs_list, bs_values)
 
     elif chosen_month == 0:
         month_name = ""
         curr_year = current_year
-        hos_sum = fill_bs_list(hos_year_df)
+        hos_sum = fill_bs_list(hos_year_df, bs_list, bs_values)
 
     else:
         month_name = month_dict[chosen_month]
         curr_year = current_year
-        hos_sum = fill_bs_list(hos_month_df)
+
+        hos_sum = fill_bs_list(hos_month_df, bs_list, bs_values)
 
     chart_frame = tk.Frame(root)
     chart_frame.grid(row=row, column=column)
@@ -176,4 +178,4 @@ def hall_of_shame_plt(root, row, column, figsize, chosen_month, chosen_year, bs_
     canvas.draw()
     canvas_widget = canvas.get_tk_widget()
     canvas_widget.bind("<Button-1>", lambda event: hos_bar_chart_window())
-    canvas_widget.grid(row=row, column=column)
+    canvas_widget.grid(row=row, column=column, sticky="nsew")

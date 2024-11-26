@@ -6,15 +6,16 @@ import pandas
 from datetime import date
 from PIL import Image, ImageTk
 
-from lists import category_list, shop_list
-from income_window import open_income_window
+# from income_window import open_income_window
 from fixed_cost_window import open_fixed_window
-from update_last_entry import update_last_entry
 from statistics_window import open_statistics
 from hall_of_shame import hall_of_shame_plt
+from add_edit_hos import add_edit_hos_cats
 
-
+from new_income_window import open_income_window
+# Test
 FONT = ("open sans", 15)
+SMALL_FONT = ("open sans", 12)
 BOLD_FONT = ("open sans", 18, "bold")
 
 PAPER_COLOR = "#fbfbfb"
@@ -29,9 +30,10 @@ PINK_COLOR = "#F7B5CA"
 PURPLE_COLOR = "#AC87C5"
 YELLOW_COLOR = "#F9F3CC"
 
-color_list = [ORANGE_COLOR, DARK_ORANGE_COLOR, BLUE_COLOR, DARK_COLOR,
-              DARK_BLUE_COLOR, GREEN_COLOR, RED_COLOR, PINK_COLOR,
-              PURPLE_COLOR, YELLOW_COLOR, PAPER_COLOR,
+color_list = [
+    ORANGE_COLOR, DARK_ORANGE_COLOR, BLUE_COLOR, DARK_COLOR,
+    DARK_BLUE_COLOR, GREEN_COLOR, RED_COLOR, PINK_COLOR,
+    PURPLE_COLOR, YELLOW_COLOR, PAPER_COLOR,
               ]
 
 current_date = date.today().strftime("%d.%m.%Y")
@@ -41,11 +43,24 @@ current_year = date.today().year
 
 fixed_costs = 0
 
-category_list = category_list
-shop_list = shop_list
+category_list = []
+shop_list = []
 
-shop_list.sort()
+with open("categories.txt", mode="r") as file:
+    for cat in file:
+        if cat:
+            clean_cat = cat.strip()
+            category_list.append(clean_cat)
+
+with open("shops.txt", mode="r") as file:
+    for shop in file:
+        if shop:
+            clean_shop = shop.strip()
+            shop_list.append(clean_shop)
+
+
 category_list.sort()
+shop_list.sort()
 
 month_list = [f"0{month}" if month < 10 else str(month) for month in range(1, 13)]
 
@@ -102,10 +117,10 @@ def save_data():
     item = item_entry.get().lower()
     price = cost_entry.get().lower().replace(",", ".")
     category = selected_category.get().lower()
-    shop = selected_shop.get().lower()
+    shops = selected_shop.get().lower()
     curr_date = date_entry.get()
 
-    if not item or not price or not category or not shop:
+    if not item or not price or not category or not shops:
         messagebox.showerror("error", "All fields must be filled")
         return
 
@@ -116,7 +131,7 @@ def save_data():
         return
 
     new_data_save = pandas.DataFrame({"item": [item],
-                                      "shop": [shop],
+                                      "shop": [shops],
                                       "category": [category],
                                       "price": [price],
                                       "date": [curr_date],
@@ -139,6 +154,27 @@ def save_data():
     messagebox.showinfo("Data saved successfully", "Your data was saved")
 
 
+def update_last_entry(label):
+    """ updates the last item bought """
+    try:
+        temp_df = pandas.read_csv("planista_database.csv")
+
+        if temp_df.empty:
+            label.config(text="No entries found")
+            return
+
+        last_item = temp_df.iloc[-1]
+
+        label.config(text=f"Your last entry: "
+                          f"{last_item['item'].title()} - "
+                          f"{last_item['price']:.2f} EUR - "
+                          f"{last_item['date']}"
+                     )
+
+    except (KeyError, IndexError, FileNotFoundError) as e:
+        label.config(text=f"Error: {str(e)}")
+
+
 # MAIN WINDOW UI
 
 main_window = tk.Tk()
@@ -159,8 +195,8 @@ selected_category.set("---")
 selected_shop = tk.StringVar()
 selected_shop.set("---")
 
-logo_label = tk.Label(gui_frame, image=logo)
-logo_label.grid(row=0, column=2, pady=20, sticky="w")
+logo_label = tk.Label(gui_frame, image=logo, bg="white")
+logo_label.grid(row=0, column=2, pady=20, sticky="nsew")
 
 item_text = tk.Label(master=gui_frame, text="Item", font=FONT, bg="white")
 item_text.grid(row=1, column=0)
@@ -182,17 +218,17 @@ if last_entry_item:
                                text=f"Your last entry: {last_entry_item.title()} - "
                                f"{last_entry_price:.2f} EUR - "
                                f"{last_entry_date}",
-                               font=FONT,
+                               font=SMALL_FONT,
                                bg="white"
                                )
-    last_entry_text.grid(row=4, column=2, columnspan=1)
+    last_entry_text.grid(row=0, column=2, columnspan=1, sticky="s")
 else:
     last_entry_text = tk.Label(master=gui_frame,
                                text="",
-                               font=FONT,
+                               font=SMALL_FONT,
                                bg="white"
                                )
-    last_entry_text.grid(row=4, column=2)
+    last_entry_text.grid(row=0, column=2)
 
 item_entry = tk.Entry(master=gui_frame, justify="right", font=("open sans", 18), bg=PAPER_COLOR)
 item_entry.grid(row=2, column=0, padx=20)
@@ -219,7 +255,7 @@ fixed_button = tk.Button(master=gui_frame,
                          font=FONT,
                          command=lambda: open_fixed_window(main_window),
                          )
-fixed_button.grid(row=3, column=3, pady=50)
+fixed_button.grid(row=4, column=3, sticky="w")
 
 stats_button = tk.Button(master=gui_frame,
                          text="Statistics",
@@ -227,7 +263,7 @@ stats_button = tk.Button(master=gui_frame,
                          command=lambda: open_statistics(main_window, last_month_df, cat_dict, label_to_remove,
                                                          bad_stuff_list, bad_stuff_values),
                          bg=BLUE_COLOR,
-                         width=20
+                         width=30
                          )
 stats_button.grid(row=5, column=2, pady=50)
 
@@ -237,7 +273,7 @@ add_income_button = tk.Button(master=gui_frame,
                               bg=YELLOW_COLOR,
                               command=lambda: open_income_window(main_window),
                               )
-add_income_button.grid(row=3, column=1, sticky="e")
+add_income_button.grid(row=4, column=1, sticky="e")
 
 drop_down_cat = tk.OptionMenu(gui_frame, selected_category, *category_list)
 drop_down_cat.config(bg=ORANGE_COLOR, font=FONT, width=10)
@@ -252,6 +288,14 @@ drop_down_shop.grid(row=2, column=2, padx=15)
 
 menu_4 = gui_frame.nametowidget(drop_down_shop.menuname)
 menu_4.config(font=FONT)
+
+edit_hos_button = tk.Button(master=gui_frame,
+                            text="Edit HOS",
+                            font=FONT,
+                            command=lambda: add_edit_hos_cats(main_window),
+                            bg=PINK_COLOR,
+                            )
+edit_hos_button.grid(row=4, column=2)
 
 hall_of_shame_plt(main_window, 7, 0, (5, 4),
                   current_month, current_year, bad_stuff_list, bad_stuff_values, main_window)
